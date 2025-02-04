@@ -5,3 +5,4 @@ declare const workspace: {
 }
 const windowList = workspace.windowList()
 console.log("Window list length:", windowList.length)
+console.log("Window list:", windowList)

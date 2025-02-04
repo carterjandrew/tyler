@@ -1,1 +1,1 @@
-(()=>{"use strict";var o=workspace.windowList();console.log("Window list length:",o.length)})();
+(()=>{"use strict";var o=workspace.windowList();console.log("Window list length:",o.length),console.log("Window list:",o)})();
