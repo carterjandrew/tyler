@@ -1,1 +1,1 @@
-(()=>{"use strict";console.log("Hello, ".concat("KWin","!"))})();
+(()=>{"use strict";var o=workspace.windowList();console.log("Window list length:",o.length)})();

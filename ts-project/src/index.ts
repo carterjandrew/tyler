@@ -1,3 +1,7 @@
-import { greet } from './greet';
-
-greet('KWin');
+import { VirtualDesktop, Window } from './types'
+declare const workspace: {
+		desktops: VirtualDesktop[],
+		windowList: () => Window[]
+}
+const windowList = workspace.windowList()
+console.log("Window list length:", windowList.length)
