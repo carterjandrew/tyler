@@ -48,6 +48,7 @@ export type Signal <T extends (...args: any[]) => void>= {
 }
 
 export type Window = {
+		internalId: string
 		dock: boolean,
 		toolbar: boolean,
 		menu: boolean,
