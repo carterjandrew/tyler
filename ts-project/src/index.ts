@@ -1,5 +1,6 @@
 import { QPoint, QSize, Signal, VirtualDesktop, Window } from './types'
 import Workspace from '../node_modules/kwin-api/src/workspace'
+import { TiledWindowRef } from './tilerTypes'
 
 /**
  * Workspace is a global object provided by KWin
@@ -8,6 +9,12 @@ import Workspace from '../node_modules/kwin-api/src/workspace'
  */
 declare const workspace: Workspace
 
-console.log(workspace.windowList().map(window => {
-		return window.internalId
+const trackedWindows: TiledWindowRef[] = workspace.windowList().map(window => ({
+	id: window.internalId,
+	desktopIndex: workspace.desktops.findIndex(desktop =>
+		desktop === window.desktops[0]
+	)!,
+	floating: false,
+	idealOrder: 0,
+	actualOrder: 0
 }))

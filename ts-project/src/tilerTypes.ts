@@ -1,3 +1,4 @@
+import Window from '../node_modules/kwin-api/src/window'
 /**
  * This defines a global list we use to track our windows
  * It helps us define what window it is, where it should be,
@@ -5,9 +6,9 @@
  * This list helps unify outputs between tilers
  * It also makes transfering items from one tiler to another much easier. 
  */
-type TiledWindowRef = {
-		id: string,
-		desktop: number,
+export type TiledWindowRef = {
+		id: Window['internalId'],
+		desktopIndex: number,
 		idealOrder: number,
 		actualOrder: number,
 		floating: boolean,
