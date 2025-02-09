@@ -1,1 +1,1 @@
-(()=>{"use strict";var r=workspace.windowList().map((function(r){return{id:r.internalId,floating:!1,idealOrder:0,actualOrder:0}}));console.log(r.map((function(r){return Object.keys(r.id)})))})();
+(()=>{"use strict";console.log(workspace.windowList().map((function(n){return n.internalId})))})();

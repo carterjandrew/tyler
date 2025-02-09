@@ -1,12 +1,13 @@
 {
-  "compilerOptions": {
-    "target": "ES5",
-    "module": "ES6",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
-  },
-  "include": ["src/**/*.ts"]
+	"compilerOptions": {
+		"target": "ES5",
+		"module": "ES6",
+		"strict": true,
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"forceConsistentCasingInFileNames": true
+	},
+	"include": [
+		"src/**/*.ts"
+	]
 }
-

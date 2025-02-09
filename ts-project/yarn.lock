@@ -558,6 +558,11 @@ kind-of@^6.0.2:
   resolved "https://registry.yarnpkg.com/kind-of/-/kind-of-6.0.3.tgz#07c05034a6c349fa06e24fa35aa76db4580ce4dd"
   integrity sha512-dcS1ul+9tmeD95T+x28/ehLgd9mENa3LsvDTtzm3vyBEO7RPptvAD+t44WVXaUjTBRcrpFeFlC8WCruUR456hw==
 
+kwin-api@^6.0.9:
+  version "6.0.9"
+  resolved "https://registry.yarnpkg.com/kwin-api/-/kwin-api-6.0.9.tgz#69ee5252153d24ab4ff75788e14dbca996acfad0"
+  integrity sha512-qxUuVUV6zK3KV9iR20pd6zF2UScjhggPtzY/AclcYLhzUPJFBt7xM7gdAFtSmiHoBIq+uZjnaxXkiZgTSzm/ZQ==
+
 loader-runner@^4.2.0:
   version "4.3.0"
   resolved "https://registry.yarnpkg.com/loader-runner/-/loader-runner-4.3.0.tgz#c1b4a163b99f614830353b16755e7149ac2314e1"
