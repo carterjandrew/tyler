@@ -1,6 +1,7 @@
-import { QPoint, QSize, Signal, VirtualDesktop, Window } from './types'
+import Window from '../node_modules/kwin-api/src/window'
 import Workspace from '../node_modules/kwin-api/src/workspace'
-import { TiledWindowRef } from './tilerTypes'
+import Monocle from './monocle'
+import KWin from '../node_modules/kwin-api/src/kwin'
 
 /**
  * Workspace is a global object provided by KWin
@@ -8,13 +9,72 @@ import { TiledWindowRef } from './tilerTypes'
  * This includes virtual destktops and windows
  */
 declare const workspace: Workspace
+declare const registerShortcut: KWin['registerShortcut']
 
-const trackedWindows: TiledWindowRef[] = workspace.windowList().map(window => ({
-	id: window.internalId,
-	desktopIndex: workspace.desktops.findIndex(desktop =>
-		desktop === window.desktops[0]
-	)!,
-	floating: false,
-	idealOrder: 0,
-	actualOrder: 0
-}))
+function getWorkspaceGeometry() {
+	const dockWindows = workspace.windowList().filter(w => w.dock)
+	var workspaceGeometry: Workspace['virtualScreenGeometry'] = workspace.virtualScreenGeometry
+	dockWindows.forEach(w => {
+		// If dock stretches across horizontally
+		if (w.width === workspace.virtualScreenGeometry.width) {
+			workspaceGeometry.height -= w.height
+			if (w.y === 0) workspaceGeometry.y += w.height
+		}
+		// If dock stretches across vertically
+		if (w.height === workspace.virtualScreenGeometry.height) {
+			workspaceGeometry.width -= w.width
+			if (w.x === 0) workspaceGeometry.x += w.width
+		}
+	})
+	return workspaceGeometry
+}
+
+function getWindowsByDesktop() {
+	const desktops: Window[][] = Array.from({
+		length: workspace.desktops.length
+	}, () => [])
+	workspace.windowList().forEach(window => {
+		if (!window.normalWindow) return
+		const desktopIndex = workspace.desktops.findIndex(
+			d => d === window.desktops[0]
+		)
+		desktops[desktopIndex].push(window)
+	})
+	return desktops
+}
+
+function tylerInit() {
+	console.log("Tyler Init ------------------")
+	const workspaceGeometry = getWorkspaceGeometry()
+	const desktops = getWindowsByDesktop()
+	return {
+		desktops,
+		workspaceGeometry
+	}
+}
+
+const { desktops, workspaceGeometry } = tylerInit()
+
+const tilers = desktops.map(d => new Monocle(d, workspaceGeometry))
+
+
+function updateDesktopIndex(): number {
+	return workspace.desktops.findIndex(d => workspace.currentDesktop === d)
+}
+var currentDesktopIndex = updateDesktopIndex()
+tilers[currentDesktopIndex].tile()
+workspace.desktopsChanged.connect(() => {
+	currentDesktopIndex = updateDesktopIndex()
+	tilers[currentDesktopIndex].tile()
+})
+
+function focusLeft() {
+	tilers[currentDesktopIndex].focusLeft()
+}
+
+registerShortcut(
+	'Focus Left',
+	'Focuses your desktop on the window left of your current window',
+	'focusLeft',
+	focusLeft
+)
