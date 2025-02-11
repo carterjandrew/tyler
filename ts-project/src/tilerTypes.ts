@@ -12,6 +12,8 @@ export interface Tiler {
 	workspaceGeometry: QRect
 	// Functions to handle refreshing of tiling
 	tile(windows: Window[]): void
+	addWindow(window: Window): void
+	removeWindow(window: Window): void
 	// Focus functions
 	focusLeft(): void
 	//		focusRight():void

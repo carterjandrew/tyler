@@ -18,6 +18,20 @@ export default class Monocle implements Tiler {
 		}))
 		this.workspaceGeometry = workspaceGeometry
 	}
+	addWindow(window: Window) {
+		this.windows.push({
+			ref: window,
+			idealIndex: this.windows.length,
+			floating: false
+		})
+		this.currentIndex = this.windows.length - 1
+		this.tile()
+	}
+	removeWindow(window: Window) {
+		this.windows = this.windows.filter(w => w.ref !== window)
+		if (this.currentIndex === this.windows.length) this.currentIndex -= 1
+		this.tile()
+	}
 	tile(): void {
 		this.windows.forEach(window => {
 			window.ref.frameGeometry = this.workspaceGeometry
@@ -27,7 +41,7 @@ export default class Monocle implements Tiler {
 	}
 	focusLeft(): void {
 		this.currentIndex -= 1
-		if (this.currentIndex < 0) this.currentIndex = this.windows.length
+		if (this.currentIndex < 0) this.currentIndex = this.windows.length - 1
 		this.tile()
 	}
 }

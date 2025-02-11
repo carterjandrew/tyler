@@ -13,7 +13,12 @@ declare const registerShortcut: KWin['registerShortcut']
 
 function getWorkspaceGeometry() {
 	const dockWindows = workspace.windowList().filter(w => w.dock)
-	var workspaceGeometry: Workspace['virtualScreenGeometry'] = workspace.virtualScreenGeometry
+	var workspaceGeometry: Workspace['virtualScreenGeometry'] = {
+		x: workspace.virtualScreenGeometry.x,
+		y: workspace.virtualScreenGeometry.y,
+		width: workspace.virtualScreenGeometry.width,
+		height: workspace.virtualScreenGeometry.height
+	}
 	dockWindows.forEach(w => {
 		// If dock stretches across horizontally
 		if (w.width === workspace.virtualScreenGeometry.width) {
@@ -57,13 +62,13 @@ const { desktops, workspaceGeometry } = tylerInit()
 
 const tilers = desktops.map(d => new Monocle(d, workspaceGeometry))
 
-
 function updateDesktopIndex(): number {
 	return workspace.desktops.findIndex(d => workspace.currentDesktop === d)
 }
 var currentDesktopIndex = updateDesktopIndex()
 tilers[currentDesktopIndex].tile()
-workspace.desktopsChanged.connect(() => {
+
+workspace.currentDesktopChanged.connect(() => {
 	currentDesktopIndex = updateDesktopIndex()
 	tilers[currentDesktopIndex].tile()
 })
@@ -74,7 +79,15 @@ function focusLeft() {
 
 registerShortcut(
 	'Focus Left',
-	'Focuses your desktop on the window left of your current window',
-	'focusLeft',
+	'Tyler: Focus Left',
+	'Meta,H',
 	focusLeft
 )
+
+workspace.windowAdded.connect(window => {
+	tilers[currentDesktopIndex].addWindow(window)
+})
+
+workspace.windowRemoved.connect(window => {
+	tilers[currentDesktopIndex].removeWindow(window)
+})
