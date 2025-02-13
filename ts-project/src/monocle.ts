@@ -19,12 +19,12 @@ export default class Monocle implements Tiler {
 		this.workspaceGeometry = workspaceGeometry
 	}
 	addWindow(window: Window) {
-		this.windows.push({
+		this.windows.splice(this.currentIndex + 1, 0, {
 			ref: window,
-			idealIndex: this.windows.length,
+			idealIndex: this.currentIndex + 1,
 			floating: false
 		})
-		this.currentIndex = this.windows.length - 1
+		this.currentIndex += 1
 		this.tile()
 	}
 	removeWindow(window: Window) {
@@ -38,6 +38,7 @@ export default class Monocle implements Tiler {
 			window.ref.noBorder = true
 		})
 		workspace.raiseWindow(this.windows[this.currentIndex].ref)
+		workspace.activeWindow = this.windows[this.currentIndex].ref
 	}
 	focusLeft(): void {
 		this.currentIndex -= 1
