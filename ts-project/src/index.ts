@@ -76,12 +76,88 @@ workspace.currentDesktopChanged.connect(() => {
 function focusLeft() {
 	tilers[currentDesktopIndex].focusLeft()
 }
+function focusRight() {
+	tilers[currentDesktopIndex].focusRight()
+}
+function focusUp() {
+	tilers[currentDesktopIndex].focusUp()
+}
+function focusDown() {
+	tilers[currentDesktopIndex].focusDown()
+}
+function toggleFloat() {
+	tilers[currentDesktopIndex].toggleFloat()
+}
+
+function moveUp() {
+	tilers[currentDesktopIndex].moveUp()
+}
+function moveDown() {
+	tilers[currentDesktopIndex].moveDown()
+}
+function moveLeft() {
+	tilers[currentDesktopIndex].moveLeft()
+}
+function moveRight() {
+	tilers[currentDesktopIndex].moveRight()
+}
 
 registerShortcut(
 	'Focus Left',
 	'Tyler: Focus Left',
-	'Meta,H',
+	'Meta+H',
 	focusLeft
+)
+registerShortcut(
+	'Focus Right',
+	'Tyler: Focus Right',
+	'Meta+L',
+	focusRight
+)
+registerShortcut(
+	'Focus Up',
+	'Tyler: Focus Up',
+	'Meta+J',
+	focusUp
+)
+registerShortcut(
+	'Focus Down',
+	'Tyler: Focus Down',
+	'Meta+K',
+	focusDown
+)
+
+
+registerShortcut(
+	'Move Up',
+	'Tyler: Move Up',
+	'Meta+Shift+K',
+	moveUp
+)
+registerShortcut(
+	'Move Down',
+	'Tyler: Move Down',
+	'Meta+Shift+J',
+	moveDown
+)
+registerShortcut(
+	'Move Left',
+	'Tyler: Move Left',
+	'Meta+Shift+H',
+	moveLeft
+)
+registerShortcut(
+	'Move Right',
+	'Tyler: Move Right',
+	'Meta+Shift+L',
+	moveUp
+)
+
+registerShortcut(
+	'Toggle Floating',
+	'Tyler: Toggle Floating',
+	'Meta+F',
+	toggleFloat
 )
 
 workspace.windowAdded.connect(window => {

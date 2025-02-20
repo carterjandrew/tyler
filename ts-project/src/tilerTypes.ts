@@ -10,19 +10,27 @@ export type TiledWindowRef = {
 export interface Tiler {
 	windows: TiledWindowRef[]
 	workspaceGeometry: QRect
+	splits: number[]
+	splitMoveAmount: number
 	// Functions to handle refreshing of tiling
 	tile(windows: Window[]): void
 	addWindow(window: Window): void
 	removeWindow(window: Window): void
 	// Focus functions
 	focusLeft(): void
-	//		focusRight():void
-	//		focusUp():void
-	//		focusDown():void
+	focusRight():void
+	focusUp():void
+	focusDown():void
+	// Float functions
+	toggleFloat(): void
 	// Move functions
-	//		moveUp(): void
-	//		moveDown():void
-	//		moveLeft():void
-	//		moveRight():void
+	moveUp(): void
+	moveDown():void
+	moveLeft():void
+	moveRight():void
 	// TODO: Move Split
+	// splitMoveLeft(): void
+	// splitMoveRight(): void
+	// splitMoveUp(): void
+	// splitMoveDown(): void
 }
