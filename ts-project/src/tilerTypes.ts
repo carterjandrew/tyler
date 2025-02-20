@@ -1,10 +1,12 @@
+import QPoint from '../node_modules/kwin-api/src/qt/qpoint'
 import QRect from '../node_modules/kwin-api/src/qt/qrect'
+import QSize from '../node_modules/kwin-api/src/qt/qsize'
 import Window from '../node_modules/kwin-api/src/window'
 
 export type TiledWindowRef = {
 	ref: Window,
 	idealIndex: number,
-	floating: boolean
+	floating: boolean,
 }
 
 export interface Tiler {
@@ -33,4 +35,6 @@ export interface Tiler {
 	// splitMoveRight(): void
 	// splitMoveUp(): void
 	// splitMoveDown(): void
+	// Functions where the user goes outisde the tilers usual controls
+	onFocusWindow(window: Window): void
 }

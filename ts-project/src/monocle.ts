@@ -1,3 +1,4 @@
+import QPoint from '../node_modules/kwin-api/src/qt/qpoint'
 import QRect from '../node_modules/kwin-api/src/qt/qrect'
 import QSize from '../node_modules/kwin-api/src/qt/qsize'
 import Window from '../node_modules/kwin-api/src/window'
@@ -39,23 +40,8 @@ export default class Monocle implements Tiler {
 	}
 	tile(): void {
 		this.windows.forEach(window => {
-			const minSize: QSize = {
-				width: Math.max(window.ref.minSize.width, 600),
-				height: Math.max(window.ref.minSize.height, 400)
-			}
-			window.ref.frameGeometry = window.floating ? {
-				x: (
-					this.workspaceGeometry.x +
-					this.workspaceGeometry.width / 2 -
-					minSize.width / 2
-				),
-				y: (
-					this.workspaceGeometry.y +
-					this.workspaceGeometry.height / 2 -
-					minSize.height / 2
-				),
-				...minSize // Give us width and height
-			} : this.workspaceGeometry
+			if (window.floating) return
+			window.ref.frameGeometry = this.workspaceGeometry
 			window.ref.noBorder = true
 		})
 		workspace.raiseWindow(this.windows[this.currentIndex].ref)
@@ -78,11 +64,34 @@ export default class Monocle implements Tiler {
 		this.focusRight()
 	}
 	toggleFloat(): void {
-		this.windows[this.currentIndex].floating = !this.windows[this.currentIndex].floating
-		this.tile()
+		const newState = !this.windows[this.currentIndex].floating
+		this.windows[this.currentIndex].floating = newState
+		if (!newState) {
+			this.tile()
+			return
+		}
+		const windowRef = this.windows[this.currentIndex].ref
+		const minSize: QSize = {
+			width: Math.max(windowRef.minSize.width, 600),
+			height: Math.max(windowRef.minSize.height, 400)
+		}
+		const topLeft: QPoint = {
+			x: (
+				this.workspaceGeometry.x +
+				this.workspaceGeometry.width / 2 -
+				minSize.width / 2),
+			y: (
+				this.workspaceGeometry.y +
+				this.workspaceGeometry.height / 2 -
+				minSize.width / 2
+			)
+		}
+		windowRef.noBorder = false
+		windowRef.frameGeometry = {
+			...topLeft,
+			...minSize
+		}
 	}
-	// These do nothing for us
-	// TODO: They could move the floating window though
 	moveUp(): void {
 		const fg = this.windows[this.currentIndex].ref.frameGeometry
 		this.windows[this.currentIndex].ref.frameGeometry = {
@@ -110,5 +119,9 @@ export default class Monocle implements Tiler {
 			...fg,
 			x: fg.x + this.splitMoveAmount
 		}
+	}
+	onFocusWindow(window: Window): void {
+		this.currentIndex = this.windows.findIndex(w => window === w.ref)
+		this.tile()
 	}
 }

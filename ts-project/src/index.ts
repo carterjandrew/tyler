@@ -127,7 +127,6 @@ registerShortcut(
 	focusDown
 )
 
-
 registerShortcut(
 	'Move Up',
 	'Tyler: Move Up',
