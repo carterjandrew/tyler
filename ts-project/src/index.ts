@@ -73,6 +73,12 @@ workspace.currentDesktopChanged.connect(() => {
 	tilers[currentDesktopIndex].tile()
 })
 
+function onFocusWindow(window: Window) {
+	tilers[currentDesktopIndex].onFocusWindow(window)
+}
+
+workspace.windowActivated.connect(onFocusWindow)
+
 function focusLeft() {
 	tilers[currentDesktopIndex].focusLeft()
 }
