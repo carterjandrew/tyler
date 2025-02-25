@@ -11,5 +11,8 @@
 	},
 	"scripts": {
 		"build": "webpack"
+	},
+	"dependencies": {
+		"kwin-api": "^6.0.9"
 	}
 }
