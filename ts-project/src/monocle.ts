@@ -33,6 +33,10 @@ export default class Monocle implements Tiler {
 		this.currentIndex += 1
 		this.tile()
 	}
+	addWindowRef(window: TiledWindowRef): void {
+		this.windows.splice(window.idealIndex, 0, window)
+		this.tile()
+	}
 	removeWindow(window: Window) {
 		this.windows = this.windows.filter(w => w.ref !== window)
 		if (this.currentIndex === this.windows.length) this.currentIndex -= 1

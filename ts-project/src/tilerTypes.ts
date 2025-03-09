@@ -15,8 +15,9 @@ export interface Tiler {
 	splits: number[]
 	splitMoveAmount: number
 	// Functions to handle refreshing of tiling
-	tile(windows: Window[]): void
+	tile(): void
 	addWindow(window: Window): void
+	addWindowRef(window: TiledWindowRef): void
 	removeWindow(window: Window): void
 	// Focus functions
 	focusLeft(): void
@@ -26,15 +27,15 @@ export interface Tiler {
 	// Float functions
 	toggleFloat(): void
 	// Move functions
-	moveUp(): void
-	moveDown():void
-	moveLeft():void
-	moveRight():void
+	//moveUp(): void
+	//moveDown():void
+	//moveLeft():void
+	//moveRight():void
 	// TODO: Move Split
 	// splitMoveLeft(): void
 	// splitMoveRight(): void
 	// splitMoveUp(): void
 	// splitMoveDown(): void
 	// Functions where the user goes outisde the tilers usual controls
-	onFocusWindow(window: Window): void
+	//onFocusWindow(window: Window): void
 }
