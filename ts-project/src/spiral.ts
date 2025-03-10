@@ -12,6 +12,12 @@ export default class Spiral implements Tiler {
 	workspaceGeometry: QRect
 	splits: number[]
 	splitMoveAmount: number
+	focusIndexers: {
+		up: (number | undefined)[]
+		down: (number | undefined)[]
+		left: (number | undefined)[]
+		right: (number | undefined)[]
+	}
 	constructor(windows: Window[], workspaceGeometry: QRect) {
 		this.currentIndex = 0
 		this.windows = windows.map((window, index) => ({
@@ -22,6 +28,12 @@ export default class Spiral implements Tiler {
 		this.workspaceGeometry = workspaceGeometry
 		this.splits = []
 		this.splitMoveAmount = 10
+		this.focusIndexers = {
+			up: new Array(undefined, windows.length),
+			down: new Array(undefined, windows.length),
+			left: new Array(undefined, windows.length),
+			right: new Array(undefined, windows.length)
+		}
 	}
 	addWindow(window: Window): void {
 		this.windows.push({
@@ -29,6 +41,7 @@ export default class Spiral implements Tiler {
 			idealIndex: this.windows.length,
 			floating: false
 		})
+		this.currentIndex = this.windows.length - 1
 		this.tile()
 	}
 	addWindowRef(window: TiledWindowRef): void {
@@ -41,23 +54,64 @@ export default class Spiral implements Tiler {
 		this.tile()
 	}
 	tile(): void {
+		workspace.raiseWindow(this.windows[this.currentIndex].ref)
+		workspace.activeWindow = this.windows[this.currentIndex].ref
 		const windows = this.windows.filter(w => !w.floating)
-		windows.map(w => w.ref.frameGeometry = this.workspaceGeometry)
+		let remainingSpace = this.workspaceGeometry
+		let reversed = true
+		for (let i = 0; i < windows.length - 1; i++) {
+			let windowSpace = remainingSpace
+			if (i % 2 === 0) { // Split vertically
+				remainingSpace = {
+					...remainingSpace,
+					width: remainingSpace.width / 2
+				}
+				windowSpace = {
+					...remainingSpace,
+					x: remainingSpace.x + remainingSpace.width
+				}
+			} else { // Split horizontally
+				remainingSpace = {
+					...remainingSpace,
+					height: remainingSpace.height / 2
+				}
+				windowSpace = {
+					...remainingSpace,
+					y: remainingSpace.y + remainingSpace.height
+				}
+			}
+			if (reversed) {
+				const temp = windowSpace
+				windowSpace = remainingSpace
+				remainingSpace = temp
+			}
+			if (i % 2 === 1) reversed = !reversed
+			this.windows[i].ref.frameGeometry = windowSpace
+		}
+		windows[windows.length - 1].ref.frameGeometry = remainingSpace
 	}
 	focusUp(): void {
-		this.currentIndex = focusUp(this.windows, this.currentIndex)
+		const newIndex = focusUp(this.windows, this.currentIndex, this.focusIndexers.up[this.currentIndex])
+		this.focusIndexers.down[newIndex] = this.currentIndex
+		this.currentIndex = newIndex
 		this.tile()
 	}
 	focusDown(): void {
-		this.currentIndex = focusDown(this.windows, this.currentIndex)
+		const newIndex = focusDown(this.windows, this.currentIndex, this.focusIndexers.down[this.currentIndex])
+		this.focusIndexers.up[newIndex] = this.currentIndex
+		this.currentIndex = newIndex
 		this.tile()
 	}
 	focusLeft(): void {
-		this.currentIndex = focusLeft(this.windows, this.currentIndex)
+		const newIndex = focusLeft(this.windows, this.currentIndex, this.focusIndexers.left[this.currentIndex])
+		this.focusIndexers.right[newIndex] = this.currentIndex
+		this.currentIndex = newIndex
 		this.tile()
 	}
 	focusRight(): void {
-		this.currentIndex = focusRight(this.windows, this.currentIndex)
+		const newIndex = focusRight(this.windows, this.currentIndex, this.focusIndexers.right[this.currentIndex])
+		this.focusIndexers.left[newIndex] = this.currentIndex
+		this.currentIndex = newIndex
 		this.tile()
 	}
 	toggleFloat(): void {

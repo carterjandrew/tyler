@@ -2,7 +2,6 @@ import Window from '../node_modules/kwin-api/src/window'
 import Workspace from '../node_modules/kwin-api/src/workspace'
 import Monocle from './monocle'
 import KWin from '../node_modules/kwin-api/src/kwin'
-import { ClientAreaOption } from '../node_modules/kwin-api/src/index'
 import Spiral from './spiral'
 
 /**
@@ -11,20 +10,29 @@ import Spiral from './spiral'
  * This includes virtual destktops and windows
  */
 declare const workspace: Workspace
-declare const KWin: {
-	PlacementArea: ClientAreaOption.PlacementArea;
-	MovementArea: ClientAreaOption.MovementArea;
-	MaximizeArea: ClientAreaOption.MaximizeArea;
-	MaximizeFullArea: ClientAreaOption.MaximizeFullArea;
-	FullScreenArea: ClientAreaOption.FullScreenArea;
-	WorkArea: ClientAreaOption.WorkArea;
-	FullArea: ClientAreaOption.FullArea;
-	ScreenArea: ClientAreaOption.ScreenArea;
-}
 declare const registerShortcut: KWin['registerShortcut']
 
 function getWorkspaceGeometry() {
-	return workspace.activeScreen.geometry
+	const dockWindows = workspace.windowList().filter(w => w.dock)
+	var workspaceGeometry: Workspace['virtualScreenGeometry'] = {
+		x: workspace.virtualScreenGeometry.x,
+		y: workspace.virtualScreenGeometry.y,
+		width: workspace.virtualScreenGeometry.width,
+		height: workspace.virtualScreenGeometry.height
+	}
+	dockWindows.forEach(w => {
+		// If dock stretches across horizontally
+		if (w.width === workspace.virtualScreenGeometry.width) {
+			workspaceGeometry.height -= w.height
+			if (w.y === 0) workspaceGeometry.y += w.height
+		}
+		// If dock stretches across vertically
+		if (w.height === workspace.virtualScreenGeometry.height) {
+			workspaceGeometry.width -= w.width
+			if (w.x === 0) workspaceGeometry.x += w.width
+		}
+	})
+	return workspaceGeometry
 }
 
 function getWindowsByDesktop() {
@@ -116,13 +124,13 @@ registerShortcut(
 registerShortcut(
 	'Focus Up',
 	'Tyler: Focus Up',
-	'Meta+J',
+	'Meta+K',
 	focusUp
 )
 registerShortcut(
 	'Focus Down',
 	'Tyler: Focus Down',
-	'Meta+K',
+	'Meta+J',
 	focusDown
 )
 
