@@ -62,7 +62,15 @@ function tylerInit() {
 
 const { desktops, workspaceGeometry } = tylerInit()
 
-const tilers = desktops.map(d => new Spiral(d, workspaceGeometry))
+const tilerList = [
+	Monocle,
+	Spiral
+]
+
+// List of the availible tilers for the user to employ
+const tilers = desktops.map(d => new tilerList[0](d, workspaceGeometry))
+// Create a list of indecies we can use to move to the next tiler
+const tilerIndecies = desktops.map(() => 0)
 
 const windowsChangingDesktop: TiledWindowRef[] = []
 
@@ -121,6 +129,32 @@ function moveRight() {
 	tilers[currentDesktopIndex].moveRight()
 }
 
+function switchTiler() {
+	// Find the current index in our list
+	const nextIndex = (tilerIndecies[currentDesktopIndex] + 1) % tilerList.length
+	tilerIndecies[currentDesktopIndex] = nextIndex
+	console.log("Next index:", nextIndex)
+	// Get the tiler at the next index
+	// Get the current state of the tiler
+	const windows = tilers[currentDesktopIndex].windows
+	// TODO Clean this up
+	windows.forEach(w => w.ref.noBorder = false)
+	windows.forEach
+	// Push that into a new tiler
+	tilers[currentDesktopIndex] = new tilerList[nextIndex](
+		[],
+		workspaceGeometry
+	)
+	tilers[currentDesktopIndex].windows = windows
+	tilers[currentDesktopIndex].tile()
+}
+
+registerShortcut(
+	'Switch Tiler',
+	'Tyler: Switch Tiler',
+	'Meta+\\',
+	switchTiler
+)
 registerShortcut(
 	'Focus Left',
 	'Tyler: Focus Left',
@@ -187,9 +221,15 @@ workspace.windowList().map(
 workspace.windowAdded.connect(window => {
 	if (!window.normalWindow || window.dialog || window.fullScreen || window.menu || window.dock) return
 	window.desktopsChanged.connect(() => changeDesktop(window))
+	console.log(`Added window ${window} to destop ${currentDesktopIndex}`)
+	console.log(`Number of windows before ${tilers[currentDesktopIndex].windows.length}`)
 	tilers[currentDesktopIndex].addWindow(window)
+	console.log(`Number of windows after ${tilers[currentDesktopIndex].windows.length}`)
 })
 
 workspace.windowRemoved.connect(window => {
+	console.log(`Removing window ${window} from tiler on desktop ${currentDesktopIndex}`)
+	console.log(`Number of windows before: ${tilers[currentDesktopIndex].windows.length}`)
 	tilers[currentDesktopIndex].removeWindow(window)
+	console.log(`Number of windows after: ${tilers[currentDesktopIndex].windows.length}`)
 })

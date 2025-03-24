@@ -54,6 +54,7 @@ export default class Spiral implements Tiler {
 		const windowRef = windowRefs[0]
 		this.windows = this.windows.filter(w => w.ref !== window)
 		if (this.currentIndex === this.windows.length) this.currentIndex -= 1
+		this.tile()
 		return windowRef
 	}
 	tile(): void {

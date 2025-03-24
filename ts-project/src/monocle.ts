@@ -23,8 +23,10 @@ export default class Monocle implements Tiler {
 		this.workspaceGeometry = workspaceGeometry
 		this.splits = []
 		this.splitMoveAmount = 10
+		console.log(`Inital window index ${this.currentIndex}`)
 	}
 	addWindow(window: Window) {
+		console.log(`Splicing into index ${this.currentIndex}`)
 		this.windows.splice(this.currentIndex + 1, 0, {
 			ref: window,
 			idealIndex: this.currentIndex + 1,
@@ -43,7 +45,9 @@ export default class Monocle implements Tiler {
 		if (windowRefs.length === 0) return undefined
 		const windowRef = windowRefs[0]
 		this.windows = this.windows.filter(w => w.ref !== window)
+		console.log(`Subtracting off current index`)
 		if (this.currentIndex === this.windows.length) this.currentIndex -= 1
+		console.log(`New current index ${this.currentIndex}`)
 		this.tile()
 		return windowRef
 	}
