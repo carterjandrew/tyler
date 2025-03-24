@@ -14,7 +14,7 @@ export function euDist(p1: QPoint, p2: QPoint): number {
  * Otherwise, it will pick the window above it with the least euclidan distance
  * It will return the index it is moving to
  */
-export function focusUp(windows: TiledWindowRef[], currentIndex: number, toIndex?: number): number {
+export function findUp(windows: TiledWindowRef[], currentIndex: number, toIndex?: number): number {
 	if (toIndex && windows[toIndex]) {
 		return toIndex
 	}
@@ -36,7 +36,7 @@ export function focusUp(windows: TiledWindowRef[], currentIndex: number, toIndex
 /**
  * Function does the same but for down
  */
-export function focusDown(windows: TiledWindowRef[], currentIndex: number, toIndex?: number): number {
+export function findDown(windows: TiledWindowRef[], currentIndex: number, toIndex?: number): number {
 	if (toIndex && windows[toIndex]) {
 		return toIndex
 	}
@@ -55,7 +55,7 @@ export function focusDown(windows: TiledWindowRef[], currentIndex: number, toInd
 	)
 	return sortedWindows[0].index
 }
-export function focusLeft(windows: TiledWindowRef[], currentIndex: number, toIndex?: number): number {
+export function findLeft(windows: TiledWindowRef[], currentIndex: number, toIndex?: number): number {
 	if (toIndex && windows[toIndex]) {
 		return toIndex
 	}
@@ -74,7 +74,7 @@ export function focusLeft(windows: TiledWindowRef[], currentIndex: number, toInd
 	)
 	return sortedWindows[0].index
 }
-export function focusRight(windows: TiledWindowRef[], currentIndex: number, toIndex?: number): number {
+export function findRight(windows: TiledWindowRef[], currentIndex: number, toIndex?: number): number {
 	if (toIndex && windows[toIndex]) {
 		return toIndex
 	}
@@ -85,10 +85,6 @@ export function focusRight(windows: TiledWindowRef[], currentIndex: number, toIn
 	}))
 	// Our goal is to find the window with the largest smaller y value
 	// And the same x value
-	console.log('X', x)
-	console.log('Width', width)
-	console.log('Sum', x + width)
-	windows.map(w => console.log("Window", w.ref.x))
 	const filteredWindows = indexedWindows
 		.filter(w => Math.floor(w.window.ref.frameGeometry.x) >= Math.floor(x + width))
 	if (filteredWindows.length === 0) return currentIndex

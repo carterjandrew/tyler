@@ -3,6 +3,7 @@ import Workspace from '../node_modules/kwin-api/src/workspace'
 import Monocle from './monocle'
 import KWin from '../node_modules/kwin-api/src/kwin'
 import Spiral from './spiral'
+import { TiledWindowRef } from './tilerTypes'
 
 /**
  * Workspace is a global object provided by KWin
@@ -63,6 +64,14 @@ const { desktops, workspaceGeometry } = tylerInit()
 
 const tilers = desktops.map(d => new Spiral(d, workspaceGeometry))
 
+const windowsChangingDesktop: TiledWindowRef[] = []
+
+function changeDesktop(window: Window) {
+	const removeCalls = tilers.map(tiler => tiler.removeWindow(window))
+	const windowRef = removeCalls.filter(wr => wr)[0]!
+	windowsChangingDesktop.push(windowRef)
+}
+
 function updateDesktopIndex(): number {
 	return workspace.desktops.findIndex(d => workspace.currentDesktop === d)
 }
@@ -71,14 +80,17 @@ tilers[currentDesktopIndex].tile()
 
 workspace.currentDesktopChanged.connect(() => {
 	currentDesktopIndex = updateDesktopIndex()
+	console.log(windowsChangingDesktop.length)
+	windowsChangingDesktop.forEach(w => tilers[currentDesktopIndex].addWindowRef(w))
+	windowsChangingDesktop.splice(0, windowsChangingDesktop.length)
 	tilers[currentDesktopIndex].tile()
 })
 
-// function onFocusWindow(window: Window) {
-// 	tilers[currentDesktopIndex].onFocusWindow(window)
-// }
+function onFocusWindow(window: Window) {
+	tilers[currentDesktopIndex].onFocusWindow(window)
+}
 
-// workspace.windowActivated.connect(onFocusWindow)
+workspace.windowActivated.connect(onFocusWindow)
 
 function focusLeft() {
 	tilers[currentDesktopIndex].focusLeft()
@@ -96,18 +108,18 @@ function toggleFloat() {
 	tilers[currentDesktopIndex].toggleFloat()
 }
 
-// function moveUp() {
-// 	tilers[currentDesktopIndex].moveUp()
-// }
-// function moveDown() {
-// 	tilers[currentDesktopIndex].moveDown()
-// }
-// function moveLeft() {
-// 	tilers[currentDesktopIndex].moveLeft()
-// }
-// function moveRight() {
-// 	tilers[currentDesktopIndex].moveRight()
-// }
+function moveUp() {
+	tilers[currentDesktopIndex].moveUp()
+}
+function moveDown() {
+	tilers[currentDesktopIndex].moveDown()
+}
+function moveLeft() {
+	tilers[currentDesktopIndex].moveLeft()
+}
+function moveRight() {
+	tilers[currentDesktopIndex].moveRight()
+}
 
 registerShortcut(
 	'Focus Left',
@@ -134,30 +146,30 @@ registerShortcut(
 	focusDown
 )
 
-// registerShortcut(
-// 	'Move Up',
-// 	'Tyler: Move Up',
-// 	'Meta+Shift+K',
-// 	moveUp
-// )
-// registerShortcut(
-// 	'Move Down',
-// 	'Tyler: Move Down',
-// 	'Meta+Shift+J',
-// 	moveDown
-// )
-// registerShortcut(
-// 	'Move Left',
-// 	'Tyler: Move Left',
-// 	'Meta+Shift+H',
-// 	moveLeft
-// )
-// registerShortcut(
-// 	'Move Right',
-// 	'Tyler: Move Right',
-// 	'Meta+Shift+L',
-// 	moveUp
-// )
+registerShortcut(
+	'Move Up',
+	'Tyler: Move Up',
+	'Meta+Shift+K',
+	moveUp
+)
+registerShortcut(
+	'Move Down',
+	'Tyler: Move Down',
+	'Meta+Shift+J',
+	moveDown
+)
+registerShortcut(
+	'Move Left',
+	'Tyler: Move Left',
+	'Meta+Shift+H',
+	moveLeft
+)
+registerShortcut(
+	'Move Right',
+	'Tyler: Move Right',
+	'Meta+Shift+L',
+	moveRight
+)
 
 registerShortcut(
 	'Toggle Floating',
@@ -166,10 +178,11 @@ registerShortcut(
 	toggleFloat
 )
 
-function changeDesktop(window: Window) {
-	const removeCalls = tilers.map(tiler => tiler.removeWindow(window))
-	const windowRef = removeCalls.filter(wr => wr)[0]
-}
+workspace.windowList().map(
+	w => w.desktopsChanged.connect(
+		() => changeDesktop(w)
+	)
+)
 
 workspace.windowAdded.connect(window => {
 	if (!window.normalWindow || window.dialog || window.fullScreen || window.menu || window.dock) return

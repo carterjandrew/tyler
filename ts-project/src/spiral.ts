@@ -1,4 +1,4 @@
-import { focusDown, focusLeft, focusRight, focusUp } from './generalTilerFunctions'
+import { findDown, findLeft, findRight, findUp } from './generalTilerFunctions'
 import QRect from '../node_modules/kwin-api/src/qt/qrect'
 import Window from '../node_modules/kwin-api/src/window'
 import Workspace from '../node_modules/kwin-api/src/workspace'
@@ -48,10 +48,13 @@ export default class Spiral implements Tiler {
 		this.windows.splice(window.idealIndex, 0, window)
 		this.tile()
 	}
-	removeWindow(window: Window): void {
+	removeWindow(window: Window): TiledWindowRef | undefined {
+		const windowRefs = this.windows.filter(w => w.ref === window)
+		if (windowRefs.length === 0) return undefined
+		const windowRef = windowRefs[0]
 		this.windows = this.windows.filter(w => w.ref !== window)
 		if (this.currentIndex === this.windows.length) this.currentIndex -= 1
-		this.tile()
+		return windowRef
 	}
 	tile(): void {
 		workspace.raiseWindow(this.windows[this.currentIndex].ref)
@@ -91,31 +94,71 @@ export default class Spiral implements Tiler {
 		windows[windows.length - 1].ref.frameGeometry = remainingSpace
 	}
 	focusUp(): void {
-		const newIndex = focusUp(this.windows, this.currentIndex, this.focusIndexers.up[this.currentIndex])
+		const newIndex = findUp(this.windows, this.currentIndex, this.focusIndexers.up[this.currentIndex])
 		this.focusIndexers.down[newIndex] = this.currentIndex
 		this.currentIndex = newIndex
 		this.tile()
 	}
 	focusDown(): void {
-		const newIndex = focusDown(this.windows, this.currentIndex, this.focusIndexers.down[this.currentIndex])
+		const newIndex = findDown(this.windows, this.currentIndex, this.focusIndexers.down[this.currentIndex])
 		this.focusIndexers.up[newIndex] = this.currentIndex
 		this.currentIndex = newIndex
 		this.tile()
 	}
 	focusLeft(): void {
-		const newIndex = focusLeft(this.windows, this.currentIndex, this.focusIndexers.left[this.currentIndex])
+		const newIndex = findLeft(this.windows, this.currentIndex, this.focusIndexers.left[this.currentIndex])
 		this.focusIndexers.right[newIndex] = this.currentIndex
 		this.currentIndex = newIndex
 		this.tile()
 	}
 	focusRight(): void {
-		const newIndex = focusRight(this.windows, this.currentIndex, this.focusIndexers.right[this.currentIndex])
+		const newIndex = findRight(this.windows, this.currentIndex, this.focusIndexers.right[this.currentIndex])
 		this.focusIndexers.left[newIndex] = this.currentIndex
 		this.currentIndex = newIndex
 		this.tile()
 	}
 	toggleFloat(): void {
 		this.windows[this.currentIndex].floating = !this.windows[this.currentIndex].floating
+		this.tile()
+	}
+	moveUp(): void {
+		const newIndex = findUp(this.windows, this.currentIndex, this.focusIndexers.up[this.currentIndex])
+		this.focusIndexers.down[newIndex] = this.currentIndex
+		const temp = this.windows[newIndex]
+		this.windows[newIndex] = this.windows[this.currentIndex]
+		this.windows[this.currentIndex] = temp
+		this.currentIndex = newIndex
+		this.tile()
+	}
+	moveDown(): void {
+		const newIndex = findDown(this.windows, this.currentIndex, this.focusIndexers.down[this.currentIndex])
+		this.focusIndexers.up[newIndex] = this.currentIndex
+		const temp = this.windows[newIndex]
+		this.windows[newIndex] = this.windows[this.currentIndex]
+		this.windows[this.currentIndex] = temp
+		this.currentIndex = newIndex
+		this.tile()
+	}
+	moveLeft(): void {
+		const newIndex = findLeft(this.windows, this.currentIndex, this.focusIndexers.down[this.currentIndex])
+		this.focusIndexers.right[newIndex] = this.currentIndex
+		const temp = this.windows[newIndex]
+		this.windows[newIndex] = this.windows[this.currentIndex]
+		this.windows[this.currentIndex] = temp
+		this.currentIndex = newIndex
+		this.tile()
+	}
+	moveRight(): void {
+		const newIndex = findRight(this.windows, this.currentIndex, this.focusIndexers.right[this.currentIndex])
+		this.focusIndexers.left[newIndex] = this.currentIndex
+		const temp = this.windows[newIndex]
+		this.windows[newIndex] = this.windows[this.currentIndex]
+		this.windows[this.currentIndex] = temp
+		this.currentIndex = newIndex
+		this.tile()
+	}
+	onFocusWindow(window: Window): void {
+		this.currentIndex = this.windows.findIndex(w => window === w.ref)
 		this.tile()
 	}
 }
