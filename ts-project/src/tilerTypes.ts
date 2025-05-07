@@ -76,12 +76,10 @@ export class BaseTiler implements BaseTilerType {
 	}
 	removeWindow(window: Window): TiledWindowRef | undefined {
 		const index = this.windows.findIndex(w => w.ref === window)
-		console.log("Index: ", index)
 		if (index === -1) return undefined
 		const windowRef = this.windows[index]
 		this.windows = this.windows.filter(w => w.ref !== window)
 		if (this.currentIndex != 0) this.currentIndex -= 1
-		this.tile()
 		return windowRef
 	}
 	tile(): void {

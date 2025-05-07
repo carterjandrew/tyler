@@ -74,24 +74,33 @@ const tilerIndecies = desktops.map(() => 0)
 
 const windowsChangingDesktop: TiledWindowRef[] = []
 
-function changeDesktop(window: Window) {
-	const di = updateDesktopIndex()
-	const removeCalls = tilers.map(tiler => tiler.removeWindow(window))
-	console.log("Remove calls: ", removeCalls)
-	const windowRef = removeCalls.filter(r => r != undefined)[0]
-	if (!windowRef) return
-	tilers[di].addWindowRef(windowRef)
-}
-
 function updateDesktopIndex(): number {
 	return workspace.desktops.findIndex(d => workspace.currentDesktop === d)
 }
+
+let i = 0
+
+function changeDesktop(window: Window) {
+	console.log(i++)
+	const di = updateDesktopIndex()
+	const removeCalls = tilers.map(tiler => tiler.removeWindow(window))
+	const windowRef = removeCalls.find(w => w != undefined)
+	if (!windowRef) return
+	tilers[di].addWindowRef(windowRef)
+	tilers[di].tile()
+}
+
+workspace.windowList().map(w => {
+	w.desktopsChanged.connect(() => {
+		changeDesktop(w)
+	})
+})
+
 var currentDesktopIndex = updateDesktopIndex()
 tilers[currentDesktopIndex].tile()
 
 workspace.currentDesktopChanged.connect(() => {
 	currentDesktopIndex = updateDesktopIndex()
-	console.log(windowsChangingDesktop.length)
 	windowsChangingDesktop.forEach(w => tilers[currentDesktopIndex].addWindowRef(w))
 	windowsChangingDesktop.splice(0, windowsChangingDesktop.length)
 	tilers[currentDesktopIndex].tile()
@@ -135,8 +144,8 @@ function moveRight() {
 function switchTiler() {
 	// Find the current index in our list
 	const nextIndex = (tilerIndecies[currentDesktopIndex] + 1) % tilerList.length
+	const currentFocusIndex = tilers[currentDesktopIndex].currentIndex
 	tilerIndecies[currentDesktopIndex] = nextIndex
-	console.log("Next index:", nextIndex)
 	// Get the tiler at the next index
 	// Get the current state of the tiler
 	const windows = tilers[currentDesktopIndex].windows
@@ -149,6 +158,7 @@ function switchTiler() {
 		workspaceGeometry
 	)
 	tilers[currentDesktopIndex].windows = windows
+	tilers[currentDesktopIndex].currentIndex = currentFocusIndex
 	tilers[currentDesktopIndex].tile()
 }
 
@@ -215,33 +225,13 @@ registerShortcut(
 	toggleFloat
 )
 
-workspace.windowList().map(w => {
-	console.log(w)
-	w.desktopsChanged.connect(
-		() => {
-			try {
-				console.log("Inital connection")
-				console.log("W:", w)
-				changeDesktop(w)
-			} catch (err) {
-				console.error("Error: ", err)
-			}
-		}
-	)
-})
-
 workspace.windowAdded.connect(window => {
 	if (!window.normalWindow || window.dialog || window.fullScreen || window.menu || window.dock) return
 	window.desktopsChanged.connect(() => changeDesktop(window))
-	console.log(`Added window ${window} to destop ${currentDesktopIndex}`)
-	console.log(`Number of windows before ${tilers[currentDesktopIndex].windows.length}`)
 	tilers[currentDesktopIndex].addWindow(window)
-	console.log(`Number of windows after ${tilers[currentDesktopIndex].windows.length}`)
 })
 
 workspace.windowRemoved.connect(window => {
-	console.log(`Removing window ${window} from tiler on desktop ${currentDesktopIndex}`)
-	console.log(`Number of windows before: ${tilers[currentDesktopIndex].windows.length}`)
 	tilers[currentDesktopIndex].removeWindow(window)
-	console.log(`Number of windows after: ${tilers[currentDesktopIndex].windows.length}`)
+	tilers[currentDesktopIndex].tile()
 })
