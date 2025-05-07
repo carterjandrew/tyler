@@ -70,19 +70,21 @@ export class BaseTiler implements BaseTilerType {
 		this.tile()
 	}
 	addWindowRef(window: TiledWindowRef): void {
-		this.windows.splice(window.idealIndex, 0, window)
+		if (window.idealIndex < this.windows.length) this.windows.splice(window.idealIndex, 0, window)
+		else this.windows.push(window)
 		this.tile()
 	}
 	removeWindow(window: Window): TiledWindowRef | undefined {
-		const windowRefs = this.windows.filter(w => w.ref === window)
-		if (windowRefs.length === 0) return undefined
-		const windowRef = windowRefs[0]
+		const index = this.windows.findIndex(w => w.ref === window)
+		console.log("Index: ", index)
+		if (index === -1) return undefined
+		const windowRef = this.windows[index]
 		this.windows = this.windows.filter(w => w.ref !== window)
-		if (this.currentIndex === this.windows.length) this.currentIndex -= 1
+		if (this.currentIndex != 0) this.currentIndex -= 1
 		this.tile()
 		return windowRef
 	}
 	tile(): void {
-		
+
 	}
 }

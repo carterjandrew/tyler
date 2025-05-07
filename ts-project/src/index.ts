@@ -75,8 +75,12 @@ const tilerIndecies = desktops.map(() => 0)
 const windowsChangingDesktop: TiledWindowRef[] = []
 
 function changeDesktop(window: Window) {
-	console.log(window.internalId)
+	const di = updateDesktopIndex()
 	const removeCalls = tilers.map(tiler => tiler.removeWindow(window))
+	console.log("Remove calls: ", removeCalls)
+	const windowRef = removeCalls.filter(r => r != undefined)[0]
+	if (!windowRef) return
+	tilers[di].addWindowRef(windowRef)
 }
 
 function updateDesktopIndex(): number {
@@ -211,11 +215,20 @@ registerShortcut(
 	toggleFloat
 )
 
-workspace.windowList().map(
-	w => w.desktopsChanged.connect(
-		() => changeDesktop(w)
+workspace.windowList().map(w => {
+	console.log(w)
+	w.desktopsChanged.connect(
+		() => {
+			try {
+				console.log("Inital connection")
+				console.log("W:", w)
+				changeDesktop(w)
+			} catch (err) {
+				console.error("Error: ", err)
+			}
+		}
 	)
-)
+})
 
 workspace.windowAdded.connect(window => {
 	if (!window.normalWindow || window.dialog || window.fullScreen || window.menu || window.dock) return

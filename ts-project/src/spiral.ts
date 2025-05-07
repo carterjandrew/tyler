@@ -2,11 +2,11 @@ import { findDown, findLeft, findRight, findUp } from './generalTilerFunctions'
 import QRect from '../node_modules/kwin-api/src/qt/qrect'
 import Window from '../node_modules/kwin-api/src/window'
 import Workspace from '../node_modules/kwin-api/src/workspace'
-import { TiledWindowRef, Tiler } from './tilerTypes'
+import { BaseTiler, TiledWindowRef, Tiler } from './tilerTypes'
 
 declare const workspace: Workspace
 
-export default class Spiral implements Tiler {
+export default class Spiral extends BaseTiler implements Tiler {
 	currentIndex: number
 	windows: TiledWindowRef[]
 	workspaceGeometry: QRect
@@ -19,6 +19,7 @@ export default class Spiral implements Tiler {
 		right: (number | undefined)[]
 	}
 	constructor(windows: Window[], workspaceGeometry: QRect) {
+		super(windows, workspaceGeometry)
 		this.currentIndex = 0
 		this.windows = windows.map((window, index) => ({
 			ref: window,
@@ -35,29 +36,8 @@ export default class Spiral implements Tiler {
 			right: new Array(undefined, windows.length)
 		}
 	}
-	addWindow(window: Window): void {
-		this.windows.push({
-			ref: window,
-			idealIndex: this.windows.length,
-			floating: false
-		})
-		this.currentIndex = this.windows.length - 1
-		this.tile()
-	}
-	addWindowRef(window: TiledWindowRef): void {
-		this.windows.splice(window.idealIndex, 0, window)
-		this.tile()
-	}
-	removeWindow(window: Window): TiledWindowRef | undefined {
-		const windowRefs = this.windows.filter(w => w.ref === window)
-		if (windowRefs.length === 0) return undefined
-		const windowRef = windowRefs[0]
-		this.windows = this.windows.filter(w => w.ref !== window)
-		if (this.currentIndex === this.windows.length) this.currentIndex -= 1
-		this.tile()
-		return windowRef
-	}
 	tile(): void {
+		if (this.windows.length === 0) return
 		workspace.raiseWindow(this.windows[this.currentIndex].ref)
 		workspace.activeWindow = this.windows[this.currentIndex].ref
 		const windows = this.windows.filter(w => !w.floating)
