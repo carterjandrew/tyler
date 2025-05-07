@@ -23,16 +23,15 @@ export default class Monocle implements Tiler {
 		this.workspaceGeometry = workspaceGeometry
 		this.splits = []
 		this.splitMoveAmount = 10
-		console.log(`Inital window index ${this.currentIndex}`)
 	}
-	addWindow(window: Window) {
-		console.log(`Splicing into index ${this.currentIndex}`)
-		this.windows.splice(this.currentIndex + 1, 0, {
+	addWindow(window: Window): void {
+		console.log(`Current index: ${this.currentIndex}`)
+		this.windows.push({
 			ref: window,
-			idealIndex: this.currentIndex + 1,
+			idealIndex: this.windows.length,
 			floating: false
 		})
-		this.currentIndex += 1
+		this.currentIndex = this.windows.length - 1
 		this.tile()
 	}
 	addWindowRef(window: TiledWindowRef): void {
