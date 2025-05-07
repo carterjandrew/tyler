@@ -75,9 +75,8 @@ const tilerIndecies = desktops.map(() => 0)
 const windowsChangingDesktop: TiledWindowRef[] = []
 
 function changeDesktop(window: Window) {
+	console.log(window.internalId)
 	const removeCalls = tilers.map(tiler => tiler.removeWindow(window))
-	const windowRef = removeCalls.filter(wr => wr)[0]!
-	windowsChangingDesktop.push(windowRef)
 }
 
 function updateDesktopIndex(): number {

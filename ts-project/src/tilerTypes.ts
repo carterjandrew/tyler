@@ -7,28 +7,33 @@ export type TiledWindowRef = {
 	floating: boolean,
 }
 
-export interface Tiler {
+export interface BaseTilerType {
 	windows: TiledWindowRef[]
 	workspaceGeometry: QRect
 	splits: number[]
 	splitMoveAmount: number
+	currentIndex: number
+	// Constructor
 	// Functions to handle refreshing of tiling
 	tile(): void
 	addWindow(window: Window): void
 	addWindowRef(window: TiledWindowRef): void
 	removeWindow(window: Window): TiledWindowRef | undefined
+}
+
+export interface Tiler extends BaseTilerType {
 	// Focus functions
 	focusLeft(): void
-	focusRight():void
-	focusUp():void
-	focusDown():void
+	focusRight(): void
+	focusUp(): void
+	focusDown(): void
 	// Float functions
 	toggleFloat(): void
 	// Move functions
 	moveUp(): void
-	moveDown():void
-	moveLeft():void
-	moveRight():void
+	moveDown(): void
+	moveLeft(): void
+	moveRight(): void
 	// TODO: Move Split
 	// splitMoveLeft(): void
 	// splitMoveRight(): void
@@ -36,4 +41,48 @@ export interface Tiler {
 	// splitMoveDown(): void
 	// Functions where the user goes outisde the tilers usual controls
 	onFocusWindow(window: Window): void
+}
+
+export class BaseTiler implements BaseTilerType {
+	windows: TiledWindowRef[]
+	splits: number[]
+	workspaceGeometry: QRect
+	splitMoveAmount: number
+	currentIndex: number
+	constructor(windows: Window[], workspaceGeometry: QRect) {
+		this.currentIndex = 0
+		this.windows = windows.map((window, index) => ({
+			ref: window,
+			floating: false,
+			idealIndex: index
+		}))
+		this.workspaceGeometry = workspaceGeometry
+		this.splits = []
+		this.splitMoveAmount = 10
+	}
+	addWindow(window: Window): void {
+		this.windows.push({
+			ref: window,
+			idealIndex: this.windows.length,
+			floating: false
+		})
+		this.currentIndex = this.windows.length - 1
+		this.tile()
+	}
+	addWindowRef(window: TiledWindowRef): void {
+		this.windows.splice(window.idealIndex, 0, window)
+		this.tile()
+	}
+	removeWindow(window: Window): TiledWindowRef | undefined {
+		const windowRefs = this.windows.filter(w => w.ref === window)
+		if (windowRefs.length === 0) return undefined
+		const windowRef = windowRefs[0]
+		this.windows = this.windows.filter(w => w.ref !== window)
+		if (this.currentIndex === this.windows.length) this.currentIndex -= 1
+		this.tile()
+		return windowRef
+	}
+	tile(): void {
+		
+	}
 }
