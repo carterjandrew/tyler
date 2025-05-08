@@ -233,7 +233,12 @@ workspace.windowAdded.connect(window => {
 			tiler.workspaceGeometry = workspaceGeometry
 		})
 	}
-	if (!window.normalWindow || window.dialog || window.fullScreen || window.menu || window.dock) return
+	Object.entries(window).map(([key, value]) => {
+		if (value === true) {
+			console.log(`${key}: ${value}`)
+		}
+	})
+	if (!window.normalWindow || window.dialog || window.fullScreen || window.menu || window.dock || window.utility || window.skipPager || window.skipTaskbar) return
 	window.desktopsChanged.connect(() => changeDesktop(window))
 	tilers[currentDesktopIndex].addWindow(window)
 })
