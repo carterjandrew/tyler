@@ -3,17 +3,18 @@ import QRect from '../node_modules/kwin-api/src/qt/qrect'
 import QSize from '../node_modules/kwin-api/src/qt/qsize'
 import Window from '../node_modules/kwin-api/src/window'
 import Workspace from '../node_modules/kwin-api/src/workspace'
-import { TiledWindowRef, Tiler } from './tilerTypes'
+import { BaseTiler, TiledWindowRef, Tiler } from './tilerTypes'
 
 declare const workspace: Workspace
 
-export default class Monocle implements Tiler {
+export default class Monocle extends BaseTiler implements Tiler {
 	currentIndex: number
 	windows: TiledWindowRef[]
 	workspaceGeometry: QRect
 	splits: number[]
 	splitMoveAmount: number
 	constructor(windows: Window[], workspaceGeometry: QRect) {
+		super(windows, workspaceGeometry)
 		this.currentIndex = 0
 		this.windows = windows.map((window, index) => ({
 			ref: window,
@@ -24,21 +25,8 @@ export default class Monocle implements Tiler {
 		this.splits = []
 		this.splitMoveAmount = 10
 	}
-	addWindow(window: Window) {
-		this.windows.splice(this.currentIndex + 1, 0, {
-			ref: window,
-			idealIndex: this.currentIndex + 1,
-			floating: false
-		})
-		this.currentIndex += 1
-		this.tile()
-	}
-	removeWindow(window: Window) {
-		this.windows = this.windows.filter(w => w.ref !== window)
-		if (this.currentIndex === this.windows.length) this.currentIndex -= 1
-		this.tile()
-	}
 	tile(): void {
+		if (this.windows.length === 0) return
 		this.windows.forEach(window => {
 			if (window.floating) return
 			window.ref.frameGeometry = this.workspaceGeometry
@@ -62,6 +50,12 @@ export default class Monocle implements Tiler {
 	}
 	focusDown(): void {
 		this.focusRight()
+	}
+	removeWindow(window: Window): TiledWindowRef | undefined {
+		const w = super.removeWindow(window)
+		if (!w) return w
+		w.ref.noBorder = false
+		return w
 	}
 	toggleFloat(): void {
 		const newState = !this.windows[this.currentIndex].floating
