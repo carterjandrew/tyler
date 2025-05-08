@@ -76,24 +76,28 @@ export default class Spiral extends BaseTiler implements Tiler {
 	}
 	focusUp(): void {
 		const newIndex = findUp(this.windows, this.currentIndex, this.focusIndexers.up[this.currentIndex])
+		if(newIndex == this.currentIndex) return
 		this.focusIndexers.down[newIndex] = this.currentIndex
 		this.currentIndex = newIndex
 		this.tile()
 	}
 	focusDown(): void {
 		const newIndex = findDown(this.windows, this.currentIndex, this.focusIndexers.down[this.currentIndex])
+		if(newIndex == this.currentIndex) return
 		this.focusIndexers.up[newIndex] = this.currentIndex
 		this.currentIndex = newIndex
 		this.tile()
 	}
 	focusLeft(): void {
 		const newIndex = findLeft(this.windows, this.currentIndex, this.focusIndexers.left[this.currentIndex])
+		if(newIndex == this.currentIndex) return
 		this.focusIndexers.right[newIndex] = this.currentIndex
 		this.currentIndex = newIndex
 		this.tile()
 	}
 	focusRight(): void {
 		const newIndex = findRight(this.windows, this.currentIndex, this.focusIndexers.right[this.currentIndex])
+		if(newIndex == this.currentIndex) return
 		this.focusIndexers.left[newIndex] = this.currentIndex
 		this.currentIndex = newIndex
 		this.tile()

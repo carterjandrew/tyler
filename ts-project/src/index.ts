@@ -60,7 +60,7 @@ function tylerInit() {
 	}
 }
 
-const { desktops, workspaceGeometry } = tylerInit()
+let { desktops, workspaceGeometry } = tylerInit()
 
 const tilerList = [
 	Monocle,
@@ -226,6 +226,13 @@ registerShortcut(
 )
 
 workspace.windowAdded.connect(window => {
+	if (window.dock) {
+		console.log("Dock window added")
+		workspaceGeometry = getWorkspaceGeometry()
+		tilers.forEach(tiler => {
+			tiler.workspaceGeometry = workspaceGeometry
+		})
+	}
 	if (!window.normalWindow || window.dialog || window.fullScreen || window.menu || window.dock) return
 	window.desktopsChanged.connect(() => changeDesktop(window))
 	tilers[currentDesktopIndex].addWindow(window)
