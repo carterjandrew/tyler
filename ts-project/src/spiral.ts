@@ -125,7 +125,7 @@ export default class Spiral extends BaseTiler implements Tiler {
 		this.tile()
 	}
 	moveLeft(): void {
-		const newIndex = findLeft(this.windows, this.currentIndex, this.focusIndexers.down[this.currentIndex])
+		const newIndex = findLeft(this.windows, this.currentIndex, this.focusIndexers.left[this.currentIndex])
 		this.focusIndexers.right[newIndex] = this.currentIndex
 		const temp = this.windows[newIndex]
 		this.windows[newIndex] = this.windows[this.currentIndex]
