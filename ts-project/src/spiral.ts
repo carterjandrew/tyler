@@ -12,6 +12,7 @@ export default class Spiral extends BaseTiler implements Tiler {
 	workspaceGeometry: QRect
 	splits: number[]
 	splitMoveAmount: number
+	gapAmount: number
 	focusIndexers: {
 		up: (number | undefined)[]
 		down: (number | undefined)[]
@@ -35,13 +36,24 @@ export default class Spiral extends BaseTiler implements Tiler {
 			left: new Array(undefined, windows.length),
 			right: new Array(undefined, windows.length)
 		}
+		// TODO Fix how this is handled
+		this.gapAmount = 3
+	}
+	addGapToRect(rect: QRect, gapAmount: number): QRect {
+		const { x, y, width, height } = rect
+		return {
+			x: x + gapAmount / 2,
+			y: y + gapAmount / 2,
+			width: width - gapAmount,
+			height: height - gapAmount
+		}
 	}
 	tile(): void {
 		if (this.windows.length === 0) return
 		workspace.raiseWindow(this.windows[this.currentIndex].ref)
 		workspace.activeWindow = this.windows[this.currentIndex].ref
 		const windows = this.windows.filter(w => !w.floating)
-		let remainingSpace = this.workspaceGeometry
+		let remainingSpace = this.addGapToRect(this.workspaceGeometry, this.gapAmount)
 		let reversed = true
 		for (let i = 0; i < windows.length - 1; i++) {
 			let windowSpace = remainingSpace
@@ -70,34 +82,40 @@ export default class Spiral extends BaseTiler implements Tiler {
 				remainingSpace = temp
 			}
 			if (i % 2 === 1) reversed = !reversed
-			this.windows[i].ref.frameGeometry = windowSpace
+			this.windows[i].ref.frameGeometry = this.addGapToRect(
+				windowSpace,
+				this.gapAmount
+			)
 		}
-		windows[windows.length - 1].ref.frameGeometry = remainingSpace
+		windows[windows.length - 1].ref.frameGeometry = this.addGapToRect(
+			remainingSpace,
+			this.gapAmount
+		)
 	}
 	focusUp(): void {
 		const newIndex = findUp(this.windows, this.currentIndex, this.focusIndexers.up[this.currentIndex])
-		if(newIndex == this.currentIndex) return
+		if (newIndex == this.currentIndex) return
 		this.focusIndexers.down[newIndex] = this.currentIndex
 		this.currentIndex = newIndex
 		this.tile()
 	}
 	focusDown(): void {
 		const newIndex = findDown(this.windows, this.currentIndex, this.focusIndexers.down[this.currentIndex])
-		if(newIndex == this.currentIndex) return
+		if (newIndex == this.currentIndex) return
 		this.focusIndexers.up[newIndex] = this.currentIndex
 		this.currentIndex = newIndex
 		this.tile()
 	}
 	focusLeft(): void {
 		const newIndex = findLeft(this.windows, this.currentIndex, this.focusIndexers.left[this.currentIndex])
-		if(newIndex == this.currentIndex) return
+		if (newIndex == this.currentIndex) return
 		this.focusIndexers.right[newIndex] = this.currentIndex
 		this.currentIndex = newIndex
 		this.tile()
 	}
 	focusRight(): void {
 		const newIndex = findRight(this.windows, this.currentIndex, this.focusIndexers.right[this.currentIndex])
-		if(newIndex == this.currentIndex) return
+		if (newIndex == this.currentIndex) return
 		this.focusIndexers.left[newIndex] = this.currentIndex
 		this.currentIndex = newIndex
 		this.tile()
