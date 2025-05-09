@@ -238,7 +238,17 @@ workspace.windowAdded.connect(window => {
 			console.log(`${key}: ${value}`)
 		}
 	})
-	if (!window.normalWindow || window.dialog || window.fullScreen || window.menu || window.dock || window.utility || window.skipPager || window.skipTaskbar) return
+	// Gross
+	if (
+		!window.normalWindow ||
+		window.dialog ||
+		window.fullScreen ||
+		window.menu ||
+		window.dock ||
+		window.utility ||
+		window.skipPager ||
+		window.skipTaskbar
+	) return
 	window.desktopsChanged.connect(() => changeDesktop(window))
 	tilers[currentDesktopIndex].addWindow(window)
 })
