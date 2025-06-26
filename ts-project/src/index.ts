@@ -141,6 +141,20 @@ function moveRight() {
 	tilers[currentDesktopIndex].moveRight()
 }
 
+// Split functions (rearange the window sizes)
+function moveSplitUp() {
+	tilers[currentDesktopIndex].splitMoveUp()
+}
+function moveSplitDown() {
+	tilers[currentDesktopIndex].splitMoveDown()
+}
+function moveSplitLeft() {
+	tilers[currentDesktopIndex].splitMoveLeft()
+}
+function moveSplitRight() {
+	tilers[currentDesktopIndex].splitMoveRight()
+}
+
 function switchTiler() {
 	// Find the current index in our list
 	const nextIndex = (tilerIndecies[currentDesktopIndex] + 1) % tilerList.length
@@ -216,6 +230,32 @@ registerShortcut(
 	'Tyler: Move Right',
 	'Meta+Shift+L',
 	moveRight
+)
+
+// Split shortcuts
+registerShortcut(
+	'Move Split Down',
+	'Tyler: Move Split Down',
+	'Meta+Alt+J',
+	moveSplitDown
+)
+registerShortcut(
+	'Move Split Up',
+	'Tyler: Move Split Up',
+	'Meta+Alt+K',
+	moveSplitUp
+)
+registerShortcut(
+	'Move Split Right',
+	'Tyler: Move Split Right',
+	'Meta+Alt+L',
+	moveSplitRight
+)
+registerShortcut(
+	'Move Split Left',
+	'Tyler: Move Split Left',
+	'Meta+Alt+H',
+	moveSplitLeft
 )
 
 registerShortcut(
