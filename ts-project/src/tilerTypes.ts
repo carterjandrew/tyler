@@ -35,10 +35,10 @@ export interface Tiler extends BaseTilerType {
 	moveLeft(): void
 	moveRight(): void
 	// TODO: Move Split
-	// splitMoveLeft(): void
-	// splitMoveRight(): void
-	// splitMoveUp(): void
-	// splitMoveDown(): void
+	splitMoveLeft(): void
+	splitMoveRight(): void
+	splitMoveUp(): void
+	splitMoveDown(): void
 	// Functions where the user goes outisde the tilers usual controls
 	onFocusWindow(window: Window): void
 }

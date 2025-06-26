@@ -118,4 +118,17 @@ export default class Monocle extends BaseTiler implements Tiler {
 		this.currentIndex = this.windows.findIndex(w => window === w.ref)
 		this.tile()
 	}
+	// TODO actually impliment
+	splitMoveUp(): void {
+		console.log("Split move up called")
+	}
+	splitMoveDown(): void {
+		console.log("Split move down called")
+	}
+	splitMoveLeft(): void {
+		console.log("Split move left called")
+	}
+	splitMoveRight(): void {
+		console.log("Split move right called")
+	}
 }
