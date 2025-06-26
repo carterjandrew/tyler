@@ -79,7 +79,9 @@ export class BaseTiler implements BaseTilerType {
 		if (index === -1) return undefined
 		const windowRef = this.windows[index]
 		this.windows = this.windows.filter(w => w.ref !== window)
+		console.log("Starting index:", this.currentIndex)
 		if (this.currentIndex != 0) this.currentIndex -= 1
+		console.log("Ending index:", this.currentIndex)
 		return windowRef
 	}
 	tile(): void {
