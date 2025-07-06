@@ -75,8 +75,7 @@ export default class Spiral extends BaseTiler implements Tiler {
 					...remainingSpace,
 					height: remainingSpace.height * this.splits[i]
 				}
-				windowSpace = {
-					...remainingSpace,
+				windowSpace = { ...remainingSpace,
 					y: remainingSpace.y + remainingSpace.height,
 					height: windowSpace.height - remainingSpace.height
 				}
@@ -169,6 +168,14 @@ export default class Spiral extends BaseTiler implements Tiler {
 		this.currentIndex = this.windows.findIndex(w => window === w.ref)
 		this.tile()
 	}
+	// I have determined a rule set for interacting with this, for a spiral layout:
+	// There are two important directions our window needs to handle:
+	// Primary, where it leaves reminaing space
+	// Opposite, opposite direction to this
+	// If we detect primary expend in that direction
+	// If we do not, look at previous index and see if it's opposite, if opposite we shrink
+	// If we fail to find previous index, we flip our direction and try again
+	// We will keep a cache of the last index moved, and for half a second if we detect a move in it's directions we will move the split according to that
 	// TODO actually impliment
 	splitMoveUp(): void {
 		console.log("Split move up called")
