@@ -1,6 +1,34 @@
 import QRect from '../node_modules/kwin-api/src/qt/qrect'
 import Window from '../node_modules/kwin-api/src/window'
 
+export enum Directions {
+	up = 0,
+	down = 1,
+	left = 2,
+	right = 3
+}
+
+export const DirectionOpposite = {
+		[Directions.up]: Directions.down,
+		[Directions.down]: Directions.up,
+		[Directions.left]: Directions.right,
+		[Directions.right]: Directions.left
+}
+
+export const DirectionClockwise = {
+		[Directions.up]: Directions.right,
+		[Directions.right]: Directions.down,
+		[Directions.down]: Directions.left,
+		[Directions.left]: Directions.up
+}
+
+export const DirectionsCounterClockwise = {
+		[Directions.up]: Directions.left,
+		[Directions.left]: Directions.down,
+		[Directions.down]: Directions.right,
+		[Directions.right]: Directions.up
+}
+
 export type TiledWindowRef = {
 	ref: Window,
 	idealIndex: number,
