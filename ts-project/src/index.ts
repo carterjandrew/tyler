@@ -165,13 +165,13 @@ function switchTiler() {
 	const windows = tilers[currentDesktopIndex].windows
 	// TODO Clean this up
 	windows.forEach(w => w.ref.noBorder = false)
-	windows.forEach
 	// Push that into a new tiler
 	tilers[currentDesktopIndex] = new tilerList[nextIndex](
 		[],
 		workspaceGeometry
 	)
 	tilers[currentDesktopIndex].windows = windows
+	tilers[currentDesktopIndex].splits = new Array(windows.length).fill(0.5)
 	tilers[currentDesktopIndex].currentIndex = currentFocusIndex
 	tilers[currentDesktopIndex].tile()
 }
