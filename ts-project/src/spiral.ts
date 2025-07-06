@@ -28,8 +28,11 @@ export default class Spiral extends BaseTiler implements Tiler {
 			idealIndex: index
 		}))
 		this.workspaceGeometry = workspaceGeometry
-		this.splits = []
-		this.splitMoveAmount = 10
+		console.log("Windows", this.windows)
+		console.log("Window length", this.windows.length)
+		this.splits = new Array(this.windows.length).fill(0.5)
+		console.log("Splits:", this.splits)
+		this.splitMoveAmount = 0.05
 		this.focusIndexers = {
 			up: new Array(undefined, windows.length),
 			down: new Array(undefined, windows.length),
@@ -60,20 +63,22 @@ export default class Spiral extends BaseTiler implements Tiler {
 			if (i % 2 === 0) { // Split vertically
 				remainingSpace = {
 					...remainingSpace,
-					width: remainingSpace.width / 2
+					width: remainingSpace.width * this.splits[i]
 				}
 				windowSpace = {
 					...remainingSpace,
-					x: remainingSpace.x + remainingSpace.width
+					x: remainingSpace.x + remainingSpace.width,
+					width: windowSpace.width - remainingSpace.width
 				}
 			} else { // Split horizontally
 				remainingSpace = {
 					...remainingSpace,
-					height: remainingSpace.height / 2
+					height: remainingSpace.height * this.splits[i]
 				}
 				windowSpace = {
 					...remainingSpace,
-					y: remainingSpace.y + remainingSpace.height
+					y: remainingSpace.y + remainingSpace.height,
+					height: windowSpace.height - remainingSpace.height
 				}
 			}
 			if (reversed) {
@@ -167,9 +172,13 @@ export default class Spiral extends BaseTiler implements Tiler {
 	// TODO actually impliment
 	splitMoveUp(): void {
 		console.log("Split move up called")
+		this.splits[this.currentIndex] += this.splitMoveAmount
+		this.tile()
 	}
 	splitMoveDown(): void {
 		console.log("Split move down called")
+		this.splits[this.currentIndex] -= this.splitMoveAmount
+		this.tile()
 	}
 	splitMoveLeft(): void {
 		console.log("Split move left called")
