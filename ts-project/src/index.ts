@@ -143,36 +143,38 @@ function moveRight() {
 
 // Split functions (rearange the window sizes)
 function moveSplitUp() {
-	tilers[currentDesktopIndex].splitMoveUp()
+	tilers[currentDesktopIndex].windowResizeUp()
 }
 function moveSplitDown() {
-	tilers[currentDesktopIndex].splitMoveDown()
+	tilers[currentDesktopIndex].windowResizeDown()
 }
 function moveSplitLeft() {
-	tilers[currentDesktopIndex].splitMoveLeft()
+	tilers[currentDesktopIndex].windowResizeLeft()
 }
 function moveSplitRight() {
-	tilers[currentDesktopIndex].splitMoveRight()
+	tilers[currentDesktopIndex].windowResizeRight()
 }
 
 function switchTiler() {
 	// Find the current index in our list
 	const nextIndex = (tilerIndecies[currentDesktopIndex] + 1) % tilerList.length
-	const currentFocusIndex = tilers[currentDesktopIndex].currentIndex
+	const currentFocusIndex = tilers[currentDesktopIndex].focusedIndex
 	tilerIndecies[currentDesktopIndex] = nextIndex
 	// Get the tiler at the next index
 	// Get the current state of the tiler
-	const windows = tilers[currentDesktopIndex].windows
+	const tiledWindows = tilers[currentDesktopIndex].tiledWindows
+	const floatingWindows = tilers[currentDesktopIndex].floatingWindows
 	// TODO Clean this up
-	windows.forEach(w => w.ref.noBorder = false)
+	tiledWindows.forEach(w => w.ref.noBorder = false)
 	// Push that into a new tiler
 	tilers[currentDesktopIndex] = new tilerList[nextIndex](
 		[],
 		workspaceGeometry
 	)
-	tilers[currentDesktopIndex].windows = windows
-	tilers[currentDesktopIndex].splits = new Array(windows.length).fill(0.5)
-	tilers[currentDesktopIndex].currentIndex = currentFocusIndex
+	tilers[currentDesktopIndex].floatingWindows = floatingWindows
+	tiledWindows.forEach(w => tilers[currentDesktopIndex].addWindowRef(w))
+	tilers[currentDesktopIndex].tiledWindows = tiledWindows 
+	tilers[currentDesktopIndex].floatingWindows = floatingWindows
 	tilers[currentDesktopIndex].tile()
 }
 
