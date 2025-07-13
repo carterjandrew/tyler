@@ -1,0 +1,3 @@
+[submodule "kwin4_effect_geometry_change"]
+	path = kwin4_effect_geometry_change
+	url = https://github.com/carterjandrew/kwin4_effect_geometry_change.git
