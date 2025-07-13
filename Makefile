@@ -12,9 +12,15 @@ build:
 	yarn build && \
 	popd
 
+build-effect:
+	pushd kwin4_effect_geometry_change && \
+	make install && \
+	popd
+
 # Move target
 move:
 	cp ts-project/dist/main.js ktile/contents/code/main.js
 
 install:
+	kpackagetool6 --type=KWin/Script -i ktile/ || \
 	kpackagetool6 --type=KWin/Script -u ktile/
