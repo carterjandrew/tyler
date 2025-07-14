@@ -1,24 +1,22 @@
 import QRect from '../node_modules/kwin-api/src/qt/qrect'
-import Window from '../node_modules/kwin-api/src/window'
 import Workspace from '../node_modules/kwin-api/src/workspace'
-import { BaseTiler, TiledWindowRef, Tiler } from './tilerTypes'
+import { Tiler, TilerContextInterface } from './tilerTypes'
 
 declare const workspace: Workspace
 
-export default class Monocle extends BaseTiler implements Tiler {
-	currentIndex: number
+export default class Monocle implements Tiler {
 	workspaceGeometry: QRect
-	constructor(windows: Window[], workspaceGeometry: QRect) {
-		super(windows, workspaceGeometry)
-		this.currentIndex = 0
-		this.workspaceGeometry = workspaceGeometry
+	ctx: TilerContextInterface
+	constructor(ctx: TilerContextInterface) {
+		this.ctx = ctx
+		this.workspaceGeometry = ctx.workspaceGeometry
 	}
 	tile(): void {
-		this.tiledWindows.forEach(window => {
+		this.ctx.tiledWindows.forEach(window => {
 			window.ref.frameGeometry = this.workspaceGeometry
 			window.ref.noBorder = true
 		})
-		const windowRef = this.getCurrentWindow()
+		const windowRef = this.ctx.getCurrentWindow()
 		if (windowRef !== undefined) {
 			workspace.raiseWindow(windowRef.ref)
 			workspace.activeWindow = windowRef.ref
@@ -26,18 +24,18 @@ export default class Monocle extends BaseTiler implements Tiler {
 	}
 	focusLeft(): void {
 		const windowList = (
-			this.focusedFloating ? this.floatingWindows : this.tiledWindows
+			this.ctx.focusedFloating ? this.ctx.floatingWindows : this.ctx.tiledWindows
 		)
-		this.currentIndex -= 1
-		if (this.currentIndex < 0) this.currentIndex = windowList.length - 1
+		this.ctx.focusedIndex -= 1
+		if (this.ctx.focusedIndex < 0) this.ctx.focusedIndex = windowList.length - 1
 		this.tile()
 	}
 	focusRight(): void {
 		const windowList = (
-			this.focusedFloating ? this.floatingWindows : this.tiledWindows
+			this.ctx.focusedFloating ? this.ctx.floatingWindows : this.ctx.tiledWindows
 		)
-		this.currentIndex += 1
-		this.currentIndex %= windowList.length
+		this.ctx.focusedIndex += 1
+		this.ctx.focusedIndex %= windowList.length
 		this.tile
 	}
 	focusUp(): void {
@@ -46,34 +44,28 @@ export default class Monocle extends BaseTiler implements Tiler {
 	focusDown(): void {
 		this.focusRight()
 	}
-	removeWindow(window: Window): TiledWindowRef | undefined {
-		const w = super.removeWindow(window)
-		if (!w) return w
-		w.ref.noBorder = false
-		return w
-	}
 	moveUp(): void {
-			if(this.focusedFloating) this.moveFloatingWindowUp()
+		if (this.ctx.focusedFloating) this.ctx.moveFloatingWindowUp()
 	}
 	moveDown(): void {
-			if(this.focusedFloating) this.moveFloatingWindowDown()
+		if (this.ctx.focusedFloating) this.ctx.moveFloatingWindowDown()
 	}
 	moveLeft(): void {
-			if(this.focusedFloating) this.moveFloatingWindowLeft()
+		if (this.ctx.focusedFloating) this.ctx.moveFloatingWindowLeft()
 	}
 	moveRight(): void {
-			if(this.focusedFloating) this.moveFloatingWindowRight()
+		if (this.ctx.focusedFloating) this.ctx.moveFloatingWindowRight()
 	}
 	windowResizeUp(): void {
-	    this.moveUp()
+		this.moveUp()
 	}
 	windowResizeDown(): void {
-	    this.moveDown()
+		this.moveDown()
 	}
 	windowResizeLeft(): void {
-	    this.moveLeft()
+		this.moveLeft()
 	}
 	windowResizeRight(): void {
-	    this.moveRight()
+		this.moveRight()
 	}
 }
