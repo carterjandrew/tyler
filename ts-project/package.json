@@ -11,7 +11,7 @@
 	},
 	"scripts": {
 		"build": "webpack",
-		"lint": "tsc"
+		"lint": "tsc --dry --verbose"
 	},
 	"dependencies": {
 		"kwin-api": "^6.0.9"

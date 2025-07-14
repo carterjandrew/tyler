@@ -3,7 +3,7 @@ import Workspace from '../node_modules/kwin-api/src/workspace'
 import Monocle from './monocle'
 import KWin from '../node_modules/kwin-api/src/kwin'
 import Spiral from './spiral'
-import { TiledWindowRef } from './tilerTypes'
+import { TilerContext } from './tilerTypes'
 
 /**
  * Workspace is a global object provided by KWin
@@ -37,15 +37,15 @@ function getWorkspaceGeometry() {
 }
 
 function getWindowsByDesktop() {
-	const desktops: Window[][] = Array.from({
-		length: workspace.desktops.length
-	}, () => [])
+	const desktops = Object.fromEntries<Window[]>(
+		workspace.desktops.map(d => [d.id, []])
+	)
 	workspace.windowList().forEach(window => {
 		if (!window.normalWindow) return
-		const desktopIndex = workspace.desktops.findIndex(
+		const { id } = workspace.desktops.find(
 			d => d === window.desktops[0]
-		)
-		desktops[desktopIndex].push(window)
+		)!
+		desktops[id].push(window)
 	})
 	return desktops
 }
@@ -67,27 +67,45 @@ const tilerList = [
 	Spiral
 ]
 
-// List of the availible tilers for the user to employ
-const tilers = desktops.map(d => new tilerList[0](d, workspaceGeometry))
+// List of contexts our tilers will share, mapped by desktopIndex
+const tilerContexts = Object.fromEntries(
+	workspace.desktops.map(d => [
+		d.id,
+		new TilerContext(desktops[d.id], workspaceGeometry)
+	])
+)
+// Instanciate all our tilers
+const tilers = Object.fromEntries(
+	workspace.desktops.map(d => [
+		d.id,
+		tilerList.map(T => new T(tilerContexts[d.id]))
+	])
+)
+
+const currentTilers = Object.fromEntries(
+	workspace.desktops.map(d => [
+		d.id,
+		tilers[d.id][0]
+	])
+)
 // Create a list of indecies we can use to move to the next tiler
-const tilerIndecies = desktops.map(() => 0)
+const tilerIndecies = Object.fromEntries(
+	workspace.desktops.map(d => [d.id, 0])
+)
 
-const windowsChangingDesktop: TiledWindowRef[] = []
 
-function updateDesktopIndex(): number {
-	return workspace.desktops.findIndex(d => workspace.currentDesktop === d)
+function updateDesktopID(): string {
+	return workspace.desktops.find(d => workspace.currentDesktop === d)!.id
 }
 
-let i = 0
 
 function changeDesktop(window: Window) {
-	console.log(i++)
-	const di = updateDesktopIndex()
-	const removeCalls = tilers.map(tiler => tiler.removeWindow(window))
+	const di = updateDesktopID()
+	const removeCalls = Object.values(tilerContexts).map(tiler => tiler.removeWindow(window))
 	const windowRef = removeCalls.find(w => w != undefined)
 	if (!windowRef) return
-	tilers[di].addWindowRef(windowRef)
-	tilers[di].tile()
+	tilerContexts[di].addWindowRef(windowRef)
+	currentTilers[di].tile()
 }
 
 workspace.windowList().map(w => {
@@ -96,86 +114,74 @@ workspace.windowList().map(w => {
 	})
 })
 
-var currentDesktopIndex = updateDesktopIndex()
-tilers[currentDesktopIndex].tile()
+// Kick our first tiler off
+var currentDesktopID = updateDesktopID()
+currentTilers[currentDesktopID].tile()
 
+// Begin all our hook logic
 workspace.currentDesktopChanged.connect(() => {
-	currentDesktopIndex = updateDesktopIndex()
-	windowsChangingDesktop.forEach(w => tilers[currentDesktopIndex].addWindowRef(w))
-	windowsChangingDesktop.splice(0, windowsChangingDesktop.length)
-	tilers[currentDesktopIndex].tile()
+	currentDesktopID = updateDesktopID()
+	currentTilers[currentDesktopID].tile()
 })
 
 function onFocusWindow(window: Window) {
-	tilers[currentDesktopIndex].onFocusWindow(window)
+	tilerContexts[currentDesktopID].onFocusWindow(window)
 }
 
 workspace.windowActivated.connect(onFocusWindow)
 
 function focusLeft() {
-	tilers[currentDesktopIndex].focusLeft()
+	currentTilers[currentDesktopID].focusLeft()
 }
 function focusRight() {
-	tilers[currentDesktopIndex].focusRight()
+	currentTilers[currentDesktopID].focusRight()
 }
 function focusUp() {
-	tilers[currentDesktopIndex].focusUp()
+	currentTilers[currentDesktopID].focusUp()
 }
 function focusDown() {
-	tilers[currentDesktopIndex].focusDown()
+	currentTilers[currentDesktopID].focusDown()
 }
 function toggleFloat() {
-	tilers[currentDesktopIndex].toggleFloat()
+	tilerContexts[currentDesktopID].toggleFloat()
 }
 
 function moveUp() {
-	tilers[currentDesktopIndex].moveUp()
+	currentTilers[currentDesktopID].moveUp()
 }
 function moveDown() {
-	tilers[currentDesktopIndex].moveDown()
+	currentTilers[currentDesktopID].moveDown()
 }
 function moveLeft() {
-	tilers[currentDesktopIndex].moveLeft()
+	currentTilers[currentDesktopID].moveLeft()
 }
 function moveRight() {
-	tilers[currentDesktopIndex].moveRight()
+	currentTilers[currentDesktopID].moveRight()
 }
 
 // Split functions (rearange the window sizes)
 function moveSplitUp() {
-	tilers[currentDesktopIndex].windowResizeUp()
+	currentTilers[currentDesktopID].windowResizeUp()
 }
 function moveSplitDown() {
-	tilers[currentDesktopIndex].windowResizeDown()
+	currentTilers[currentDesktopID].windowResizeDown()
 }
 function moveSplitLeft() {
-	tilers[currentDesktopIndex].windowResizeLeft()
+	currentTilers[currentDesktopID].windowResizeLeft()
 }
 function moveSplitRight() {
-	tilers[currentDesktopIndex].windowResizeRight()
+	currentTilers[currentDesktopID].windowResizeRight()
 }
 
 function switchTiler() {
-	// Find the current index in our list
-	const nextIndex = (tilerIndecies[currentDesktopIndex] + 1) % tilerList.length
-	const currentFocusIndex = tilers[currentDesktopIndex].focusedIndex
-	tilerIndecies[currentDesktopIndex] = nextIndex
-	// Get the tiler at the next index
-	// Get the current state of the tiler
-	const tiledWindows = tilers[currentDesktopIndex].tiledWindows
-	const floatingWindows = tilers[currentDesktopIndex].floatingWindows
-	// TODO Clean this up
-	tiledWindows.forEach(w => w.ref.noBorder = false)
-	// Push that into a new tiler
-	tilers[currentDesktopIndex] = new tilerList[nextIndex](
-		[],
-		workspaceGeometry
-	)
-	tilers[currentDesktopIndex].floatingWindows = floatingWindows
-	tiledWindows.forEach(w => tilers[currentDesktopIndex].addWindowRef(w))
-	tilers[currentDesktopIndex].tiledWindows = tiledWindows 
-	tilers[currentDesktopIndex].floatingWindows = floatingWindows
-	tilers[currentDesktopIndex].tile()
+	// Find current index
+	const currentIndex = tilerIndecies[currentDesktopID]
+	// Find next index
+	const nextIndex = (currentIndex + 1) % tilerList.length
+	// Switch current tiler
+	currentTilers[currentDesktopID] = tilers[currentDesktopID][nextIndex]
+	// Trigger retile
+	currentTilers[currentDesktopID].tile()
 }
 
 registerShortcut(
@@ -271,7 +277,7 @@ workspace.windowAdded.connect(window => {
 	if (window.dock) {
 		console.log("Dock window added")
 		workspaceGeometry = getWorkspaceGeometry()
-		tilers.forEach(tiler => {
+		Object.values(tilerContexts).forEach(tiler => {
 			tiler.workspaceGeometry = workspaceGeometry
 		})
 	}
@@ -284,7 +290,6 @@ workspace.windowAdded.connect(window => {
 	if (
 		!window.normalWindow ||
 		window.dialog ||
-		window.fullScreen ||
 		window.menu ||
 		window.dock ||
 		window.utility ||
@@ -292,10 +297,10 @@ workspace.windowAdded.connect(window => {
 		window.skipTaskbar
 	) return
 	window.desktopsChanged.connect(() => changeDesktop(window))
-	tilers[currentDesktopIndex].addWindow(window)
+	tilerContexts[currentDesktopID].addWindow(window)
 })
 
 workspace.windowRemoved.connect(window => {
-	tilers[currentDesktopIndex].removeWindow(window)
-	tilers[currentDesktopIndex].tile()
+	tilerContexts[currentDesktopID].removeWindow(window)
+	currentTilers[currentDesktopID].tile()
 })

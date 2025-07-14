@@ -39,8 +39,31 @@ export type TiledWindowRef = {
 	idealIndex: number,
 }
 
+// Functions we should implement to be a tiler
+export interface Tiler {
+	ctx: TilerContextInterface
+	// Focus functions
+	focusLeft(): void
+	focusRight(): void
+	focusUp(): void
+	focusDown(): void
+	// Move functions
+	moveUp(): void
+	moveDown(): void
+	moveLeft(): void
+	moveRight(): void
+	windowResizeLeft(): void
+	// Help us resize windows
+	windowResizeRight(): void
+	windowResizeUp(): void
+	windowResizeDown(): void
+}
+
 // Data and functions that are shared among all tilers
-export interface BaseTilerType {
+export interface TilerContextInterface {
+	// This acts as a singleton for context among all tilers on a virtual desktop
+	// Therefore we need a tiler to be able to pass our context to
+	// Context data we track
 	tiledWindows: TiledWindowRef[]
 	floatingWindows: TiledWindowRef[]
 	workspaceGeometry: QRect
@@ -67,26 +90,8 @@ export interface BaseTilerType {
 	onFocusWindow(window: Window): void
 }
 
-// Functions we should implement to be a tiler
-export interface Tiler extends BaseTilerType {
-	// Focus functions
-	focusLeft(): void
-	focusRight(): void
-	focusUp(): void
-	focusDown(): void
-	// Move functions
-	moveUp(): void
-	moveDown(): void
-	moveLeft(): void
-	moveRight(): void
-	windowResizeLeft(): void
-	// Help us resize windows
-	windowResizeRight(): void
-	windowResizeUp(): void
-	windowResizeDown(): void
-}
 
-export class BaseTiler implements BaseTilerType {
+export class TilerContext implements TilerContextInterface {
 	// Variables the class impliments
 	tiledWindows: TiledWindowRef[]
 	floatingWindows: TiledWindowRef[]
@@ -285,16 +290,16 @@ export class BaseTiler implements BaseTilerType {
 	onFocusWindow(window: Window): void {
 		// Check both lists for window
 		const tiledIndex = this.tiledWindows.findIndex(w => w.ref == window)
-		if(tiledIndex > -1){
-				this.focusedFloating = false
-				this.focusedIndex = tiledIndex
-				return
+		if (tiledIndex > -1) {
+			this.focusedFloating = false
+			this.focusedIndex = tiledIndex
+			return
 		}
 		const floatingIndex = this.floatingWindows.findIndex(w => w.ref == window)
-		if(floatingIndex > -1){
-				this.focusedFloating = true
-				this.focusedIndex = floatingIndex
-				return
+		if (floatingIndex > -1) {
+			this.focusedFloating = true
+			this.focusedIndex = floatingIndex
+			return
 		}
 		throw new Error("No window found when calling onFocusWindow")
 	}
