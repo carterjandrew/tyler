@@ -140,7 +140,7 @@ workspace.virtualScreenSizeChanged.connect(() => {
 })
 
 workspace.activitiesChanged.connect((e) => {
-		console.log("Activity changed to: ", e)
+	console.log("Activity changed to: ", e)
 })
 
 workspace.currentDesktopChanged.connect(() => {
@@ -303,9 +303,8 @@ registerShortcut(
 )
 
 workspace.windowAdded.connect(window => {
-	console.log("This works")
 	if (window.dock) {
-		console.log("Dock window added")
+		console.log(`Detected dock ${window.internalId} in windowAdded hook`)
 		workspaceGeometry = getWorkspaceGeometry()
 		Object.values(tilerContexts).forEach(tiler => {
 			tiler.workspaceGeometry = workspaceGeometry

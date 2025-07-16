@@ -189,9 +189,7 @@ export class TilerContext implements TilerContextInterface {
 		if (index === -1) return undefined
 		const windowRef = this.tiledWindows[index]
 		this.tiledWindows = this.tiledWindows.filter(w => w.ref !== window)
-		console.log("Starting index:", this.focusedIndex)
 		if (this.focusedIndex != 0) this.focusedIndex -= 1
-		console.log("Ending index:", this.focusedIndex)
 		return windowRef
 	}
 	// Float functions
