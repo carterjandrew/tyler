@@ -17,7 +17,7 @@ export default class Spiral implements Tiler {
 		right: (number | undefined)[]
 	}
 	ctx: TilerContextInterface
-	constructor(ctx: TilerContextInterface) {
+	constructor(ctx: TilerContextInterface, gapAmount = 4) {
 		this.ctx = ctx
 		this.splits = new Array(ctx.tiledWindows.length).fill(0.5)
 		this.windowResizeMoveAmount = 0.05
@@ -28,7 +28,7 @@ export default class Spiral implements Tiler {
 			right: new Array(undefined, ctx.tiledWindows.length)
 		}
 		// TODO Fix how this is handled
-		this.gapAmount = 3
+		this.gapAmount = gapAmount
 	}
 	addGapToRect(rect: QRect, gapAmount: number): QRect {
 		const { x, y, width, height } = rect
@@ -40,12 +40,18 @@ export default class Spiral implements Tiler {
 		}
 	}
 	tile(): void {
+		console.log("Spiral tile call initated")
 		if (this.ctx.tiledWindows.length === 0) return
+		// Check that we have all the splits we need
+		while (this.splits.length < this.ctx.tiledWindows.length) {
+			this.splits = [...this.splits, 0.5]
+		}
 		workspace.raiseWindow(this.ctx.tiledWindows[this.ctx.focusedIndex].ref)
 		workspace.activeWindow = this.ctx.tiledWindows[this.ctx.focusedIndex].ref
 		let remainingSpace = this.addGapToRect(this.ctx.workspaceGeometry, this.gapAmount)
 		let reversed = true
 		for (let i = 0; i < this.ctx.tiledWindows.length - 1; i++) {
+			console.log(`Split for tile ${i} is ${this.splits[i]}`)
 			let windowSpace = remainingSpace
 			if (i % 2 === 0) { // Split vertically
 				remainingSpace = {
@@ -78,6 +84,8 @@ export default class Spiral implements Tiler {
 				windowSpace,
 				this.gapAmount
 			)
+			console.log(`Spiral tiler tiled window index ${i} with geometry ${JSON.stringify(windowSpace, null, 2)}`)
+			console.log(`Spiral tiler left remaining geometry ${JSON.stringify(remainingSpace, null, 2)}`)
 		}
 		this.ctx.tiledWindows[this.ctx.tiledWindows.length - 1].ref.frameGeometry = this.addGapToRect(
 			remainingSpace,
