@@ -5,15 +5,13 @@ import { Tiler, TilerContextInterface } from './tilerTypes'
 declare const workspace: Workspace
 
 export default class Monocle implements Tiler {
-	workspaceGeometry: QRect
 	ctx: TilerContextInterface
 	constructor(ctx: TilerContextInterface) {
 		this.ctx = ctx
-		this.workspaceGeometry = ctx.workspaceGeometry
 	}
 	tile(): void {
 		this.ctx.tiledWindows.forEach(window => {
-			window.ref.frameGeometry = this.workspaceGeometry
+			window.ref.frameGeometry = this.ctx.workspaceGeometry
 			window.ref.noBorder = true
 		})
 		const windowRef = this.ctx.getCurrentWindow()

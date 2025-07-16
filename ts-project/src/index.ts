@@ -13,6 +13,19 @@ import { TilerContext } from './tilerTypes'
 declare const workspace: Workspace
 declare const registerShortcut: KWin['registerShortcut']
 
+// TODO move this helper function elsewhere
+function fromEntries<K extends PropertyKey, V>(entries: [K, V][]): Record<K, V> {
+	// create an empty and assert it to our mapped type
+	const result = {} as Record<K, V>
+
+	for (const [key, value] of entries) {
+		result[key] = value;
+	}
+
+	return result;
+}
+
+
 function getWorkspaceGeometry() {
 	const dockWindows = workspace.windowList().filter(w => w.dock)
 	var workspaceGeometry: Workspace['virtualScreenGeometry'] = {
@@ -37,7 +50,7 @@ function getWorkspaceGeometry() {
 }
 
 function getWindowsByDesktop() {
-	const desktops = Object.fromEntries<Window[]>(
+	const desktops = fromEntries<string, Window[]>(
 		workspace.desktops.map(d => [d.id, []])
 	)
 	workspace.windowList().forEach(window => {
@@ -68,28 +81,28 @@ const tilerList = [
 ]
 
 // List of contexts our tilers will share, mapped by desktopIndex
-const tilerContexts = Object.fromEntries(
+const tilerContexts = fromEntries(
 	workspace.desktops.map(d => [
 		d.id,
 		new TilerContext(desktops[d.id], workspaceGeometry)
 	])
 )
 // Instanciate all our tilers
-const tilers = Object.fromEntries(
+const tilers = fromEntries(
 	workspace.desktops.map(d => [
 		d.id,
 		tilerList.map(T => new T(tilerContexts[d.id]))
 	])
 )
 
-const currentTilers = Object.fromEntries(
+const currentTilers = fromEntries(
 	workspace.desktops.map(d => [
 		d.id,
 		tilers[d.id][0]
 	])
 )
 // Create a list of indecies we can use to move to the next tiler
-const tilerIndecies = Object.fromEntries(
+const tilerIndecies = fromEntries(
 	workspace.desktops.map(d => [d.id, 0])
 )
 
@@ -119,6 +132,17 @@ var currentDesktopID = updateDesktopID()
 currentTilers[currentDesktopID].tile()
 
 // Begin all our hook logic
+
+workspace.virtualScreenSizeChanged.connect(() => {
+	console.log("Virtual screen size change detected")
+	workspaceGeometry = getWorkspaceGeometry()
+	Object.values(tilerContexts).forEach(c => c.workspaceGeometry = workspaceGeometry)
+})
+
+workspace.activitiesChanged.connect((e) => {
+		console.log("Activity changed to: ", e)
+})
+
 workspace.currentDesktopChanged.connect(() => {
 	currentDesktopID = updateDesktopID()
 	currentTilers[currentDesktopID].tile()
@@ -178,8 +202,13 @@ function switchTiler() {
 	const currentIndex = tilerIndecies[currentDesktopID]
 	// Find next index
 	const nextIndex = (currentIndex + 1) % tilerList.length
+	tilerIndecies[currentDesktopID] = nextIndex
 	// Switch current tiler
 	currentTilers[currentDesktopID] = tilers[currentDesktopID][nextIndex]
+	// TODO fix, messy
+	tilerContexts[currentDesktopID].tiledWindows.forEach(
+		w => w.ref.noBorder = false
+	)
 	// Trigger retile
 	currentTilers[currentDesktopID].tile()
 }
@@ -274,6 +303,7 @@ registerShortcut(
 )
 
 workspace.windowAdded.connect(window => {
+	console.log("This works")
 	if (window.dock) {
 		console.log("Dock window added")
 		workspaceGeometry = getWorkspaceGeometry()
@@ -281,12 +311,6 @@ workspace.windowAdded.connect(window => {
 			tiler.workspaceGeometry = workspaceGeometry
 		})
 	}
-	Object.entries(window).map(([key, value]) => {
-		if (value === true) {
-			console.log(`${key}: ${value}`)
-		}
-	})
-	// Gross
 	if (
 		!window.normalWindow ||
 		window.dialog ||
@@ -298,6 +322,7 @@ workspace.windowAdded.connect(window => {
 	) return
 	window.desktopsChanged.connect(() => changeDesktop(window))
 	tilerContexts[currentDesktopID].addWindow(window)
+	currentTilers[currentDesktopID].tile()
 })
 
 workspace.windowRemoved.connect(window => {
