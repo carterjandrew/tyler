@@ -149,6 +149,7 @@ workspace.currentDesktopChanged.connect(() => {
 })
 
 function onFocusWindow(window: Window) {
+	console.log("Window onfocus isDeleted: ", window.deleted)
 	tilerContexts[currentDesktopID].onFocusWindow(window)
 }
 
@@ -326,7 +327,7 @@ workspace.windowAdded.connect(window => {
 })
 
 workspace.windowRemoved.connect(window => {
-	console.log("Current index, outside scope", tilerContexts[currentDesktopID].focusedIndex)
+		console.log("Window removed is deleted: ", window.deleted)
 	tilerContexts[currentDesktopID].removeWindow(window)
 	currentTilers[currentDesktopID].tile()
 })
