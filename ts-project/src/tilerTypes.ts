@@ -100,6 +100,7 @@ export class TilerContext implements TilerContextInterface {
 	focusedIndex: number
 	focusedFloating: boolean
 	floatingWindowMoveAmount: number
+	focusIndexOutdated: boolean
 	windowIsTileable(window: Window): boolean {
 		// Almost anything but a normal window is not really for us to tile
 		if (window.dock ||
@@ -128,6 +129,7 @@ export class TilerContext implements TilerContextInterface {
 		this.floatingWindowMoveAmount = floatingWindowMoveAmount
 		this.focusedIndex = 0
 		this.focusedFloating = false
+		this.focusIndexOutdated = false
 		const tiledWindows = windows.filter(w => this.windowIsTileable(w))
 		const floatingWindows = windows.filter(w => !this.windowIsTileable(w))
 		// Set our focus to the index of a window, if any exist upon initalization
@@ -169,6 +171,7 @@ export class TilerContext implements TilerContextInterface {
 				ref: window,
 				idealIndex: this.tiledWindows.length
 			})
+			console.log("Calculated index:", this.tiledWindows.length - 1)
 			this.focusedIndex = this.tiledWindows.length - 1
 			this.focusedFloating = false
 		} else {
@@ -185,11 +188,12 @@ export class TilerContext implements TilerContextInterface {
 		else this.tiledWindows.push(window)
 	}
 	removeWindow(window: Window): TiledWindowRef | undefined {
+		console.log("Context detected window closed")
 		const index = this.tiledWindows.findIndex(w => w.ref === window)
 		if (index === -1) return undefined
 		const windowRef = this.tiledWindows[index]
 		this.tiledWindows = this.tiledWindows.filter(w => w.ref !== window)
-		if (this.focusedIndex != 0) this.focusedIndex -= 1
+		if (this.focusedIndex >= this.tiledWindows.length) this.focusedIndex -= 1
 		return windowRef
 	}
 	// Float functions
@@ -285,20 +289,27 @@ export class TilerContext implements TilerContextInterface {
 			x: newXValue
 		}
 	}
-	onFocusWindow(window: Window): void {
-		// Check both lists for window
-		const tiledIndex = this.tiledWindows.findIndex(w => w.ref == window)
+	findFocusIndex(): void {
+		this.focusIndexOutdated = false
+		const tiledIndex = this.tiledWindows.findIndex(
+			w => w.ref == workspace.activeWindow
+		)
 		if (tiledIndex > -1) {
 			this.focusedFloating = false
 			this.focusedIndex = tiledIndex
 			return
 		}
-		const floatingIndex = this.floatingWindows.findIndex(w => w.ref == window)
+		const floatingIndex = this.floatingWindows.findIndex(
+			w => w.ref == workspace.activeWindow
+		)
 		if (floatingIndex > -1) {
 			this.focusedFloating = true
 			this.focusedIndex = floatingIndex
 			return
 		}
-		throw new Error("No window found when calling onFocusWindow")
+		throw new Error("No window found when calling findFocusIndex")
+	}
+	onFocusWindow(window: Window): void {
+		this.focusIndexOutdated = true
 	}
 }
