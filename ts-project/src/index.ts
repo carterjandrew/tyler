@@ -322,9 +322,11 @@ workspace.windowAdded.connect(window => {
 	window.desktopsChanged.connect(() => changeDesktop(window))
 	tilerContexts[currentDesktopID].addWindow(window)
 	currentTilers[currentDesktopID].tile()
+	console.log("Current after adding focus index: ", tilerContexts[currentDesktopID].focusedIndex)
 })
 
 workspace.windowRemoved.connect(window => {
+	console.log("Current index, outside scope", tilerContexts[currentDesktopID].focusedIndex)
 	tilerContexts[currentDesktopID].removeWindow(window)
 	currentTilers[currentDesktopID].tile()
 })
