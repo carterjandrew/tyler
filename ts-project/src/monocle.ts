@@ -19,6 +19,7 @@ export default class Monocle implements Tiler {
 			workspace.raiseWindow(windowRef.ref)
 			workspace.activeWindow = windowRef.ref
 		}
+		this.ctx.postTile()
 	}
 	focusLeft(): void {
 		const windowList = (

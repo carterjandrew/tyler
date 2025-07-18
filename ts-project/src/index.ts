@@ -169,6 +169,7 @@ function focusDown() {
 }
 function toggleFloat() {
 	tilerContexts[currentDesktopID].toggleFloat()
+	currentTilers[currentDesktopID].tile()
 }
 
 function moveUp() {
