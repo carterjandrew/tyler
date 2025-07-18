@@ -6,32 +6,41 @@ import Window from '../node_modules/kwin-api/src/window'
 
 declare const workspace: Workspace
 
-export enum Directions {
+export enum Direction {
 	up = 0,
 	down = 1,
 	left = 2,
 	right = 3
 }
 
+export type DirectionMutator = (input: Direction) => Direction
+
 export const DirectionOpposite = {
-	[Directions.up]: Directions.down,
-	[Directions.down]: Directions.up,
-	[Directions.left]: Directions.right,
-	[Directions.right]: Directions.left
+	[Direction.up]: Direction.down,
+	[Direction.down]: Direction.up,
+	[Direction.left]: Direction.right,
+	[Direction.right]: Direction.left
 }
 
 export const DirectionClockwise = {
-	[Directions.up]: Directions.right,
-	[Directions.right]: Directions.down,
-	[Directions.down]: Directions.left,
-	[Directions.left]: Directions.up
+	[Direction.up]: Direction.right,
+	[Direction.right]: Direction.down,
+	[Direction.down]: Direction.left,
+	[Direction.left]: Direction.up
 }
 
-export const DirectionsCounterClockwise = {
-	[Directions.up]: Directions.left,
-	[Directions.left]: Directions.down,
-	[Directions.down]: Directions.right,
-	[Directions.right]: Directions.up
+export const DirectionCounterClockwise = {
+	[Direction.up]: Direction.left,
+	[Direction.left]: Direction.down,
+	[Direction.down]: Direction.right,
+	[Direction.right]: Direction.up
+}
+
+export const DirectionIsVertical = {
+		[Direction.up]: true,
+		[Direction.down]: true,
+		[Direction.left]: false,
+		[Direction.right]: false,
 }
 
 export type TiledWindowRef = {

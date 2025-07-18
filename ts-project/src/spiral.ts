@@ -2,7 +2,7 @@ import { findDown, findLeft, findRight, findUp } from './generalTilerFunctions'
 import QRect from '../node_modules/kwin-api/src/qt/qrect'
 import Window from '../node_modules/kwin-api/src/window'
 import Workspace from '../node_modules/kwin-api/src/workspace'
-import { Tiler, TilerContextInterface } from './tilerTypes'
+import { Direction, DirectionClockwise, DirectionIsVertical, Tiler, TilerContextInterface } from './tilerTypes'
 
 declare const workspace: Workspace
 
@@ -46,6 +46,39 @@ export default class Spiral implements Tiler {
 			this.splits = [...this.splits, 0.5]
 		}
 	}
+	shouldReverse(dir: Direction): boolean {
+		switch (dir) {
+			case Direction.up:
+			case Direction.left:
+				return true
+			default:
+				return false
+		}
+	}
+	splitSpace(space: QRect, ratio: number, dir: Direction): [QRect, QRect] {
+		// We should have a value between 0 and 1 for ratio
+		if (ratio < 0 || ratio > 1) throw new Error(`Bad split ratio input: ${ratio}`)
+
+		const isV = DirectionIsVertical[dir]
+		const lenKey = isV ? "height" : "width"
+		const posKey = isV ? "y" : "x"
+
+		const firstSize = space[lenKey] * ratio
+		const secondSize = space[lenKey] - firstSize
+
+		const firstRect: QRect = {
+			...space,
+			[lenKey]: firstSize
+		}
+		const secondRect: QRect = {
+			...space,
+			[lenKey]: secondSize,
+			[posKey]: space[posKey] + firstSize
+		}
+
+		const shouldR = this.shouldReverse(dir)
+		return shouldR ? [firstRect, secondRect] : [secondRect, firstRect]
+	}
 	tile(): void {
 		console.log("Spiral tile call initated")
 		if (this.ctx.tiledWindows.length === 0) return
@@ -57,52 +90,32 @@ export default class Spiral implements Tiler {
 		// Adds half the border gap we see around the edges
 		// The other half comes from when we addGap on the window itself
 		let remainingSpace = this.addGapToRect(this.ctx.workspaceGeometry, this.gapAmount)
-		let reversed = true
-		for (let i = 0; i < this.ctx.tiledWindows.length - 1; i++) {
-			console.log(`Split for tile ${i} is ${this.splits[i]}`)
-			let windowSpace = remainingSpace
-			if (i % 2 === 0) { // Split vertically
-				remainingSpace = {
-					...remainingSpace,
-					width: remainingSpace.width * this.splits[i]
-				}
-				windowSpace = {
-					...remainingSpace,
-					x: remainingSpace.x + remainingSpace.width,
-					width: windowSpace.width - remainingSpace.width
-				}
-			} else { // Split horizontally
-				remainingSpace = {
-					...remainingSpace,
-					height: remainingSpace.height * this.splits[i]
-				}
-				windowSpace = {
-					...remainingSpace,
-					y: remainingSpace.y + remainingSpace.height,
-					height: windowSpace.height - remainingSpace.height
-				}
-			}
-			if (reversed) {
-				const temp = windowSpace
-				windowSpace = remainingSpace
-				remainingSpace = temp
-			}
-			if (i % 2 === 1) reversed = !reversed
-			this.ctx.tiledWindows[i].ref.frameGeometry = this.addGapToRect(
-				windowSpace,
-				this.gapAmount
+		let direction = Direction.left
+		const dirMutator = DirectionClockwise
+		this.ctx.tiledWindows.forEach((w, i) => {
+			// Dont run this for our last window
+			if (i == this.ctx.tiledWindows.length - 1) return
+			const [windowSpace, temp] = this.splitSpace(
+				remainingSpace, this.splits[i], direction
 			)
-			console.log(`Spiral tiler tiled window index ${i} with geometry ${JSON.stringify(windowSpace, null, 2)}`)
-			console.log(`Spiral tiler left remaining geometry ${JSON.stringify(remainingSpace, null, 2)}`)
-		}
-		this.ctx.tiledWindows[this.ctx.tiledWindows.length - 1].ref.frameGeometry = this.addGapToRect(
-			remainingSpace,
-			this.gapAmount
-		)
+			w.ref.frameGeometry = windowSpace 
+			remainingSpace = temp
+			direction = dirMutator[direction]
+		})
+		// Tile our last window
+		this.ctx.tiledWindows[
+			this.ctx.tiledWindows.length - 1
+		].ref.frameGeometry = remainingSpace
+		// Push floating windows to to the top of the screen
+		// And any postTile cleanup added in the future
 		this.ctx.postTile()
 	}
 	focusUp(): void {
-		const newIndex = findUp(this.ctx.tiledWindows, this.ctx.focusedIndex, this.focusIndexers.up[this.ctx.focusedIndex])
+		const newIndex = findUp(
+			this.ctx.tiledWindows,
+			this.ctx.focusedIndex,
+			this.focusIndexers.up[this.ctx.focusedIndex]
+		)
 		if (newIndex == this.ctx.focusedIndex) return
 		this.focusIndexers.down[newIndex] = this.ctx.focusedIndex
 		this.ctx.focusedIndex = newIndex
