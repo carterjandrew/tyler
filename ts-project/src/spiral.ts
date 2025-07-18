@@ -39,15 +39,23 @@ export default class Spiral implements Tiler {
 			height: height - gapAmount
 		}
 	}
+	// TODO, eventually remove this
+	// It basically just ensures we have all the splits we need for tiling not to break
+	fillNeededSplits() {
+		while (this.splits.length < this.ctx.tiledWindows.length) {
+			this.splits = [...this.splits, 0.5]
+		}
+	}
 	tile(): void {
 		console.log("Spiral tile call initated")
 		if (this.ctx.tiledWindows.length === 0) return
 		// Check that we have all the splits we need
-		while (this.splits.length < this.ctx.tiledWindows.length) {
-			this.splits = [...this.splits, 0.5]
-		}
+		this.fillNeededSplits()
+		// Ensure kwin can see and is focused on the right window
 		workspace.raiseWindow(this.ctx.tiledWindows[this.ctx.focusedIndex].ref)
 		workspace.activeWindow = this.ctx.tiledWindows[this.ctx.focusedIndex].ref
+		// Adds half the border gap we see around the edges
+		// The other half comes from when we addGap on the window itself
 		let remainingSpace = this.addGapToRect(this.ctx.workspaceGeometry, this.gapAmount)
 		let reversed = true
 		for (let i = 0; i < this.ctx.tiledWindows.length - 1; i++) {
@@ -91,6 +99,7 @@ export default class Spiral implements Tiler {
 			remainingSpace,
 			this.gapAmount
 		)
+		this.ctx.postTile()
 	}
 	focusUp(): void {
 		const newIndex = findUp(this.ctx.tiledWindows, this.ctx.focusedIndex, this.focusIndexers.up[this.ctx.focusedIndex])

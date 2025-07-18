@@ -86,6 +86,7 @@ export interface TilerContextInterface {
 	moveFloatingWindowDown(): void
 	moveFloatingWindowLeft(): void
 	moveFloatingWindowRight(): void
+	postTile(): void
 	// Functions where the user goes outisde the tilers usual controls
 	onFocusWindow(window: Window): void
 }
@@ -157,6 +158,11 @@ export class TilerContext implements TilerContextInterface {
 		this.workspaceGeometry = workspaceGeometry
 		this.windowResizeMoveAmount = 10
 	}
+	postTile(): void {
+		this.floatingWindows.forEach(window => {
+			workspace.raiseWindow(window.ref)
+		})
+	}
 	getCurrentWindow(): TiledWindowRef | undefined {
 		const windowList = (
 			this.focusedFloating ? this.floatingWindows : this.tiledWindows
@@ -221,6 +227,7 @@ export class TilerContext implements TilerContextInterface {
 		}
 	}
 	toggleFloat(): void {
+		console.log("Toggle float triggered, currently focused on floating: ", this.focusedFloating)
 		const pullingFrom = this.focusedFloating ? this.floatingWindows : this.tiledWindows;
 		const pushingTo = this.focusedFloating ? this.tiledWindows : this.floatingWindows;
 
@@ -235,7 +242,9 @@ export class TilerContext implements TilerContextInterface {
 
 		// Update the focusedFloating state
 		this.focusedFloating = !this.focusedFloating;
-		this.focusedIndex = windowRef.idealIndex
+		this.focusedIndex = insertIndex
+		console.log("Now focused floating is", this.focusedFloating)
+		console.log("Now focued index is", this.focusedIndex)
 		if (this.focusedFloating) this.resizeWindowForFloat(windowRef.ref)
 	}
 
