@@ -80,13 +80,9 @@ export default class Spiral implements Tiler {
 		return shouldR ? [firstRect, secondRect] : [secondRect, firstRect]
 	}
 	tile(): void {
-		console.log("Spiral tile call initated")
 		if (this.ctx.tiledWindows.length === 0) return
 		// Check that we have all the splits we need
 		this.fillNeededSplits()
-		// Ensure kwin can see and is focused on the right window
-		workspace.raiseWindow(this.ctx.tiledWindows[this.ctx.focusedIndex].ref)
-		workspace.activeWindow = this.ctx.tiledWindows[this.ctx.focusedIndex].ref
 		// Adds half the border gap we see around the edges
 		// The other half comes from when we addGap on the window itself
 		let remainingSpace = this.addGapToRect(this.ctx.workspaceGeometry, this.gapAmount)

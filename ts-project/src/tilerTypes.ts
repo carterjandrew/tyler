@@ -37,10 +37,10 @@ export const DirectionCounterClockwise = {
 }
 
 export const DirectionIsVertical = {
-		[Direction.up]: true,
-		[Direction.down]: true,
-		[Direction.left]: false,
-		[Direction.right]: false,
+	[Direction.up]: true,
+	[Direction.down]: true,
+	[Direction.left]: false,
+	[Direction.right]: false,
 }
 
 export type TiledWindowRef = {
@@ -168,9 +168,20 @@ export class TilerContext implements TilerContextInterface {
 		this.windowResizeMoveAmount = 10
 	}
 	postTile(): void {
+		console.log("Post tile called")
 		this.floatingWindows.forEach(window => {
-			workspace.raiseWindow(window.ref)
+				window.ref.keepAbove = true
 		})
+		this.tiledWindows.forEach(window => {
+				window.ref.keepAbove = false
+		})
+		console.log("Currently focused floating: ", this.focusedFloating)
+		const windowToActivate = (
+			this.focusedFloating ?
+				this.floatingWindows[this.focusedIndex] :
+				this.tiledWindows[this.focusedIndex]
+		)
+		workspace.activeWindow = windowToActivate.ref
 	}
 	getCurrentWindow(): TiledWindowRef | undefined {
 		const windowList = (
