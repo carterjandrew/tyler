@@ -1,4 +1,3 @@
-import QRect from '../node_modules/kwin-api/src/qt/qrect'
 import Workspace from '../node_modules/kwin-api/src/workspace'
 import { Tiler, TilerContextInterface } from './tilerTypes'
 

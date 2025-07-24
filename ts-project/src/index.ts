@@ -169,6 +169,8 @@ function focusDown() {
 }
 function toggleFloat() {
 	tilerContexts[currentDesktopID].toggleFloat()
+	console.log("Currently the focus is", tilerContexts[currentDesktopID].focusedFloating)
+	console.log("Other context says: ", currentTilers[currentDesktopID].ctx.focusedFloating)
 	currentTilers[currentDesktopID].tile()
 }
 
