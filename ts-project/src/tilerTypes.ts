@@ -7,13 +7,10 @@ import Window from '../node_modules/kwin-api/src/window'
 declare const workspace: Workspace
 
 export enum Direction {
-	up = 0,
-	down = 1,
-	left = 2,
-	right = 3
+	up, down, left, right
 }
 
-export type DirectionMutator = (input: Direction) => Direction
+export type DirectionMutator = Record<Direction, Direction>
 
 export const DirectionOpposite = {
 	[Direction.up]: Direction.down,
