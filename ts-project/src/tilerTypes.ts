@@ -170,10 +170,10 @@ export class TilerContext implements TilerContextInterface {
 	postTile(): void {
 		console.log("Post tile called")
 		this.floatingWindows.forEach(window => {
-				window.ref.keepAbove = true
+			window.ref.keepAbove = true
 		})
 		this.tiledWindows.forEach(window => {
-				window.ref.keepAbove = false
+			window.ref.keepAbove = false
 		})
 		console.log("Currently focused floating: ", this.focusedFloating)
 		const windowToActivate = (
@@ -181,7 +181,9 @@ export class TilerContext implements TilerContextInterface {
 				this.floatingWindows[this.focusedIndex] :
 				this.tiledWindows[this.focusedIndex]
 		)
-		workspace.activeWindow = windowToActivate.ref
+		if (windowToActivate != undefined) {
+			workspace.activeWindow = windowToActivate.ref
+		}
 	}
 	getCurrentWindow(): TiledWindowRef | undefined {
 		const windowList = (
