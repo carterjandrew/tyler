@@ -60,9 +60,10 @@ export interface Tiler {
 	moveRight(): void
 	windowResizeLeft(): void
 	// Help us resize windows
-	windowResizeRight(): void
 	windowResizeUp(): void
 	windowResizeDown(): void
+	windowResizeRight(): void
+	windowResizeLeft(): void
 }
 
 // Data and functions that are shared among all tilers
@@ -95,6 +96,7 @@ export interface TilerContextInterface {
 	postTile(): void
 	// Functions where the user goes outisde the tilers usual controls
 	onFocusWindow(window: Window): void
+	isLastIndex(): boolean
 }
 
 
@@ -340,5 +342,15 @@ export class TilerContext implements TilerContextInterface {
 	onFocusWindow(window: Window): void {
 		this.focusIndexBackup = this.focusedIndex
 		this.findFocusIndex()
+	}
+	getFocusedList(): TiledWindowRef[] {
+		if (this.focusedFloating) {
+			return this.floatingWindows
+		}
+		return this.tiledWindows
+	}
+	isLastIndex(): boolean {
+		const len = this.getFocusedList().length
+		return this.focusedIndex == len - 1
 	}
 }
