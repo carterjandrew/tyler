@@ -2,11 +2,22 @@ import { findDown, findLeft, findRight, findUp } from './generalTilerFunctions'
 import QRect from '../node_modules/kwin-api/src/qt/qrect'
 import Window from '../node_modules/kwin-api/src/window'
 import Workspace from '../node_modules/kwin-api/src/workspace'
-import { Direction, DirectionClockwise, DirectionIsVertical, Tiler, TilerContextInterface } from './tilerTypes'
+import { Direction, DirectionClockwise, DirectionIsVertical, DirectionMutator, DirectionOpposite, Tiler, TilerContextInterface } from './tilerTypes'
 
 declare const workspace: Workspace
 
+enum Time {
+	Millisecond = 1,
+	Second = 1000
+}
+
 export default class Spiral implements Tiler {
+	expansionKeepTime: number
+	expandingDir: Direction
+	lastExpansionRequest: number
+	splitMoveAmount: number
+	startingDirection: Direction
+	dirMutator: DirectionMutator
 	splits: number[]
 	windowResizeMoveAmount: number
 	gapAmount: number
@@ -17,7 +28,15 @@ export default class Spiral implements Tiler {
 		right: (number | undefined)[]
 	}
 	ctx: TilerContextInterface
-	constructor(ctx: TilerContextInterface, gapAmount = 4) {
+	constructor(
+		ctx: TilerContextInterface,
+	) {
+		this.expansionKeepTime = 5 * Time.Second
+		this.expandingDir = 0 // Does not really matter what we set this to
+		this.lastExpansionRequest = Date.now()
+		this.splitMoveAmount = 0.05
+		this.startingDirection = Direction.left
+		this.dirMutator = DirectionClockwise
 		this.ctx = ctx
 		this.splits = new Array(ctx.tiledWindows.length).fill(0.5)
 		this.windowResizeMoveAmount = 0.05
@@ -28,7 +47,7 @@ export default class Spiral implements Tiler {
 			right: new Array(undefined, ctx.tiledWindows.length)
 		}
 		// TODO Fix how this is handled
-		this.gapAmount = gapAmount
+		this.gapAmount = 6
 	}
 	addGapToRect(rect: QRect, gapAmount: number): QRect {
 		const { x, y, width, height } = rect
@@ -86,17 +105,16 @@ export default class Spiral implements Tiler {
 		// Adds half the border gap we see around the edges
 		// The other half comes from when we addGap on the window itself
 		let remainingSpace = this.addGapToRect(this.ctx.workspaceGeometry, this.gapAmount)
-		let direction = Direction.left
-		const dirMutator = DirectionClockwise
+		let direction = this.startingDirection
 		this.ctx.tiledWindows.forEach((w, i) => {
 			// Dont run this for our last window
 			if (i == this.ctx.tiledWindows.length - 1) return
 			const [windowSpace, temp] = this.splitSpace(
 				remainingSpace, this.splits[i], direction
 			)
-			w.ref.frameGeometry = windowSpace 
+			w.ref.frameGeometry = windowSpace
 			remainingSpace = temp
-			direction = dirMutator[direction]
+			direction = this.dirMutator[direction]
 		})
 		// Tile our last window
 		this.ctx.tiledWindows[
@@ -187,20 +205,67 @@ export default class Spiral implements Tiler {
 	// If we fail to find previous index, we flip our direction and try again
 	// We will keep a cache of the last index moved, and for half a second if we detect a move in it's directions we will move the split according to that
 	// TODO actually impliment
+	findCurrentDirection(index: number): Direction {
+		// Only 4 directions total, so we can eliminate those
+		const modIndex = index % 4
+		let direction = this.startingDirection
+		for (let i = 0; i < modIndex; i++) {
+			direction = this.dirMutator[direction]
+		}
+		return direction
+	}
+	resizeWindowRecurse(index: number, direction: Direction): void {
+		const compDir = this.findCurrentDirection(index)
+		if (direction === compDir) {
+			this.splits[index] -= this.splitMoveAmount
+		} else if (DirectionOpposite[direction] == compDir) {
+			this.splits[index] += this.splitMoveAmount
+		} else if (index != -1) {
+			this.resizeWindowRecurse(index - 1, direction)
+		}
+	}
+	ifResizeExpandingDefer(dir: Direction): boolean {
+		const currentTime = Date.now()
+		const timeDiff = currentTime - this.lastExpansionRequest
+		if (timeDiff < this.expansionKeepTime) {
+			switch (dir) {
+				case this.expandingDir:
+					return true
+				case DirectionOpposite[this.expandingDir]:
+					return false
+			}
+		}
+		this.expandingDir = dir
+		return true
+	}
+	isResizeExpanding(dir: Direction): boolean {
+			const retVal = this.ifResizeExpandingDefer(dir)
+			this.lastExpansionRequest = Date.now()
+			return retVal
+	}
+	resizeWindow(dir: Direction): void {
+		if (this.ctx.focusedFloating) return
+		if (this.ctx.tiledWindows.length === 0) return
+		this.resizeWindowRecurse(this.ctx.focusedIndex, dir)
+	}
 	windowResizeUp(): void {
 		console.log("Split move up called")
-		this.splits[this.ctx.focusedIndex] += this.windowResizeMoveAmount
+		this.resizeWindow(Direction.up)
 		this.tile()
 	}
 	windowResizeDown(): void {
 		console.log("Split move down called")
-		this.splits[this.ctx.focusedIndex] -= this.windowResizeMoveAmount
+		this.resizeWindow(Direction.down)
 		this.tile()
 	}
 	windowResizeLeft(): void {
 		console.log("Split move left called")
+		this.resizeWindow(Direction.left)
+		this.tile()
 	}
 	windowResizeRight(): void {
 		console.log("Split move right called")
+		this.resizeWindow(Direction.right)
+		this.tile()
 	}
 }
