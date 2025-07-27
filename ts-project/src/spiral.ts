@@ -31,11 +31,11 @@ export default class Spiral implements Tiler {
 	constructor(
 		ctx: TilerContextInterface,
 	) {
-		this.expansionKeepTime = 5 * Time.Second
+		this.expansionKeepTime = 1 * Time.Second
 		this.expandingDir = 0 // Does not really matter what we set this to
 		this.lastExpansionRequest = Date.now()
 		this.splitMoveAmount = 0.05
-		this.startingDirection = Direction.left
+		this.startingDirection = Direction.right
 		this.dirMutator = DirectionClockwise
 		this.ctx = ctx
 		this.splits = new Array(ctx.tiledWindows.length).fill(0.5)
@@ -67,8 +67,8 @@ export default class Spiral implements Tiler {
 	}
 	shouldReverse(dir: Direction): boolean {
 		switch (dir) {
-			case Direction.up:
-			case Direction.left:
+			case Direction.down:
+			case Direction.right:
 				return true
 			default:
 				return false
@@ -204,6 +204,9 @@ export default class Spiral implements Tiler {
 	// If we do not, look at previous index and see if it's opposite, if opposite we shrink
 	// If we fail to find previous index, we flip our direction and try again
 	// We will keep a cache of the last index moved, and for half a second if we detect a move in it's directions we will move the split according to that
+	// When we want to expand, that actually means we want to contract the opposite direction
+	// When we want to contract, that actually means we want to expand the opposite direction
+	// We have a special case when we are the last item in the list where we will bubble up in our own direction
 	// TODO actually impliment
 	findCurrentDirection(index: number): Direction {
 		// Only 4 directions total, so we can eliminate those
@@ -213,16 +216,6 @@ export default class Spiral implements Tiler {
 			direction = this.dirMutator[direction]
 		}
 		return direction
-	}
-	resizeWindowRecurse(index: number, direction: Direction): void {
-		const compDir = this.findCurrentDirection(index)
-		if (direction === compDir) {
-			this.splits[index] -= this.splitMoveAmount
-		} else if (DirectionOpposite[direction] == compDir) {
-			this.splits[index] += this.splitMoveAmount
-		} else if (index != -1) {
-			this.resizeWindowRecurse(index - 1, direction)
-		}
 	}
 	ifResizeExpandingDefer(dir: Direction): boolean {
 		const currentTime = Date.now()
@@ -239,14 +232,37 @@ export default class Spiral implements Tiler {
 		return true
 	}
 	isResizeExpanding(dir: Direction): boolean {
-			const retVal = this.ifResizeExpandingDefer(dir)
-			this.lastExpansionRequest = Date.now()
-			return retVal
+		const retVal = this.ifResizeExpandingDefer(dir)
+		this.lastExpansionRequest = Date.now()
+		return retVal
+	}
+	resizeWindowRecurse(index: number, direction: Direction, splitMoveAmount: number): void {
+		const compDir = this.findCurrentDirection(index)
+		if (direction === compDir) {
+			this.splits[index] += splitMoveAmount
+		} else if (index != 0) {
+			this.resizeWindowRecurse(index - 1, direction, splitMoveAmount)
+		}
+	}
+	resizeWindowKickoff(index: number, direction: Direction, isExpanding: boolean): void {
+		const compDir = this.findCurrentDirection(index)
+		const movePolarity = isExpanding ? -1 : 1
+		const splitMoveAmount = this.splitMoveAmount * movePolarity
+		if (!this.ctx.isLastIndex() && direction === compDir) {
+			this.splits[index] += splitMoveAmount
+			return
+		}
+		this.resizeWindowRecurse(index - 1, DirectionOpposite[direction], splitMoveAmount)
 	}
 	resizeWindow(dir: Direction): void {
 		if (this.ctx.focusedFloating) return
 		if (this.ctx.tiledWindows.length === 0) return
-		this.resizeWindowRecurse(this.ctx.focusedIndex, dir)
+		const isExpanding = this.isResizeExpanding(dir)
+		this.resizeWindowKickoff(
+			this.ctx.focusedIndex,
+			this.expandingDir,
+			isExpanding
+		)
 	}
 	windowResizeUp(): void {
 		console.log("Split move up called")
