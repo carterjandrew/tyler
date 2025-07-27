@@ -77,6 +77,8 @@ export default class Spiral implements Tiler {
 	splitSpace(space: QRect, ratio: number, dir: Direction): [QRect, QRect] {
 		// We should have a value between 0 and 1 for ratio
 		if (ratio < 0 || ratio > 1) throw new Error(`Bad split ratio input: ${ratio}`)
+		const shouldR = this.shouldReverse(dir)
+		if (!shouldR) ratio = 1 - ratio
 
 		const isV = DirectionIsVertical[dir]
 		const lenKey = isV ? "height" : "width"
@@ -95,7 +97,6 @@ export default class Spiral implements Tiler {
 			[posKey]: space[posKey] + firstSize
 		}
 
-		const shouldR = this.shouldReverse(dir)
 		return shouldR ? [firstRect, secondRect] : [secondRect, firstRect]
 	}
 	tile(): void {
@@ -239,6 +240,7 @@ export default class Spiral implements Tiler {
 	resizeWindowRecurse(index: number, direction: Direction, splitMoveAmount: number): void {
 		const compDir = this.findCurrentDirection(index)
 		if (direction === compDir) {
+				console.log(`Direction: ${Direction[direction]} Index: ${index}`)
 			this.splits[index] += splitMoveAmount
 		} else if (index != 0) {
 			this.resizeWindowRecurse(index - 1, direction, splitMoveAmount)
@@ -247,6 +249,7 @@ export default class Spiral implements Tiler {
 	resizeWindowKickoff(index: number, direction: Direction, isExpanding: boolean): void {
 		const compDir = this.findCurrentDirection(index)
 		const movePolarity = isExpanding ? -1 : 1
+		console.log(`Move polarity: ${movePolarity}`)
 		const splitMoveAmount = this.splitMoveAmount * movePolarity
 		if (!this.ctx.isLastIndex() && direction === compDir) {
 			this.splits[index] += splitMoveAmount
