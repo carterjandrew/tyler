@@ -252,7 +252,7 @@ export default class Spiral implements Tiler {
 		console.log(`Move polarity: ${movePolarity}`)
 		const splitMoveAmount = this.splitMoveAmount * movePolarity
 		if (!this.ctx.isLastIndex() && direction === compDir) {
-			this.splits[index] += splitMoveAmount
+			this.splits[index] -= splitMoveAmount
 			return
 		}
 		this.resizeWindowRecurse(index - 1, DirectionOpposite[direction], splitMoveAmount)
