@@ -47,15 +47,15 @@ export default class Spiral implements Tiler {
 			right: new Array(undefined, ctx.tiledWindows.length)
 		}
 		// TODO Fix how this is handled
-		this.gapAmount = 6
+		this.gapAmount = 2
 	}
 	addGapToRect(rect: QRect, gapAmount: number): QRect {
 		const { x, y, width, height } = rect
 		return {
-			x: x + gapAmount / 2,
-			y: y + gapAmount / 2,
-			width: width - gapAmount,
-			height: height - gapAmount
+			x: x + gapAmount,
+			y: y + gapAmount,
+			width: width - (gapAmount * 2),
+			height: height - (gapAmount * 2)
 		}
 	}
 	// TODO, eventually remove this
@@ -108,21 +108,17 @@ export default class Spiral implements Tiler {
 		let remainingSpace = this.addGapToRect(this.ctx.workspaceGeometry, this.gapAmount)
 		let direction = this.startingDirection
 		this.ctx.tiledWindows.forEach((w, i) => {
-			// Dont run this for our last window
-			if (i == this.ctx.tiledWindows.length - 1) return
+			if (i == this.ctx.tiledWindows.length - 1) {
+				w.ref.frameGeometry = this.addGapToRect(remainingSpace, this.gapAmount)
+				return
+			}
 			const [windowSpace, temp] = this.splitSpace(
 				remainingSpace, this.splits[i], direction
 			)
-			w.ref.frameGeometry = windowSpace
+			w.ref.frameGeometry = this.addGapToRect(windowSpace, this.gapAmount)
 			remainingSpace = temp
 			direction = this.dirMutator[direction]
 		})
-		// Tile our last window
-		this.ctx.tiledWindows[
-			this.ctx.tiledWindows.length - 1
-		].ref.frameGeometry = remainingSpace
-		// Push floating windows to to the top of the screen
-		// And any postTile cleanup added in the future
 		this.ctx.postTile()
 	}
 	focusUp(): void {
@@ -240,7 +236,7 @@ export default class Spiral implements Tiler {
 	resizeWindowRecurse(index: number, direction: Direction, splitMoveAmount: number): void {
 		const compDir = this.findCurrentDirection(index)
 		if (direction === compDir) {
-				console.log(`Direction: ${Direction[direction]} Index: ${index}`)
+			console.log(`Direction: ${Direction[direction]} Index: ${index}`)
 			this.splits[index] += splitMoveAmount
 		} else if (index != 0) {
 			this.resizeWindowRecurse(index - 1, direction, splitMoveAmount)
