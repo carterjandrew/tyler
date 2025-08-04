@@ -15,7 +15,7 @@ export function euDist(p1: QPoint, p2: QPoint): number {
  * It will return the index it is moving to
  */
 export function findUp(windows: TiledWindowRef[], currentIndex: number, toIndex?: number): number {
-	if (toIndex && windows[toIndex]) {
+	if (toIndex && windows[toIndex] && toIndex != currentIndex) {
 		return toIndex
 	}
 	const { y } = windows[currentIndex].ref
@@ -37,7 +37,7 @@ export function findUp(windows: TiledWindowRef[], currentIndex: number, toIndex?
  * Function does the same but for down
  */
 export function findDown(windows: TiledWindowRef[], currentIndex: number, toIndex?: number): number {
-	if (toIndex && windows[toIndex]) {
+	if (toIndex && windows[toIndex] && toIndex != currentIndex) {
 		return toIndex
 	}
 	const { x, y, height } = windows[currentIndex].ref.frameGeometry
@@ -56,7 +56,7 @@ export function findDown(windows: TiledWindowRef[], currentIndex: number, toInde
 	return sortedWindows[0].index
 }
 export function findLeft(windows: TiledWindowRef[], currentIndex: number, toIndex?: number): number {
-	if (toIndex && windows[toIndex]) {
+	if (toIndex && windows[toIndex] && toIndex != currentIndex) {
 		return toIndex
 	}
 	const { x, y } = windows[currentIndex].ref.frameGeometry
@@ -75,7 +75,7 @@ export function findLeft(windows: TiledWindowRef[], currentIndex: number, toInde
 	return sortedWindows[0].index
 }
 export function findRight(windows: TiledWindowRef[], currentIndex: number, toIndex?: number): number {
-	if (toIndex && windows[toIndex]) {
+	if (toIndex && windows[toIndex] && toIndex != currentIndex) {
 		return toIndex
 	}
 	const { x, width } = windows[currentIndex].ref

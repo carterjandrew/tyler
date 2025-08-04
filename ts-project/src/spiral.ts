@@ -1,8 +1,7 @@
-import { findDown, findLeft, findRight, findUp } from './generalTilerFunctions'
 import QRect from '../node_modules/kwin-api/src/qt/qrect'
 import Window from '../node_modules/kwin-api/src/window'
 import Workspace from '../node_modules/kwin-api/src/workspace'
-import { Direction, DirectionClockwise, DirectionIsVertical, DirectionMutator, DirectionOpposite, Tiler, TilerContextInterface } from './tilerTypes'
+import { Direction, DirectionClockwise, DirectionCounterClockwise, DirectionIsVertical, DirectionMutator, DirectionOpposite, Tiler, TilerContextInterface } from './tilerTypes'
 
 declare const workspace: Workspace
 
@@ -21,12 +20,7 @@ export default class Spiral implements Tiler {
 	splits: number[]
 	windowResizeMoveAmount: number
 	gapAmount: number
-	focusIndexers: {
-		up: (number | undefined)[]
-		down: (number | undefined)[]
-		left: (number | undefined)[]
-		right: (number | undefined)[]
-	}
+	focusIndexers: Record<Direction, Record<number, number>>
 	ctx: TilerContextInterface
 	constructor(
 		ctx: TilerContextInterface,
@@ -41,10 +35,10 @@ export default class Spiral implements Tiler {
 		this.splits = new Array(ctx.tiledWindows.length).fill(0.5)
 		this.windowResizeMoveAmount = 0.05
 		this.focusIndexers = {
-			up: new Array(undefined, ctx.tiledWindows.length),
-			down: new Array(undefined, ctx.tiledWindows.length),
-			left: new Array(undefined, ctx.tiledWindows.length),
-			right: new Array(undefined, ctx.tiledWindows.length)
+			[Direction.up]: {},
+			[Direction.down]: {},
+			[Direction.left]: {},
+			[Direction.right]: {}
 		}
 		// TODO Fix how this is handled
 		this.gapAmount = 2
@@ -121,90 +115,80 @@ export default class Spiral implements Tiler {
 		})
 		this.ctx.postTile()
 	}
-	focusUp(): void {
-		const newIndex = findUp(
-			this.ctx.tiledWindows,
-			this.ctx.focusedIndex,
-			this.focusIndexers.up[this.ctx.focusedIndex]
-		)
-		if (newIndex == this.ctx.focusedIndex) return
-		this.focusIndexers.down[newIndex] = this.ctx.focusedIndex
-		this.ctx.focusedIndex = newIndex
+	findWindowTo(d: Direction): number {
+		const fi = this.ctx.focusedIndex
+		const isLastIndex = this.ctx.isLastIndex()
+		const currDir = this.findCurrentDirection(fi)
+		console.log("Current dir: ", Direction[currDir])
+		console.log("Passed dir: ", Direction[d])
+		if (!isLastIndex && currDir == d) {
+			return fi + 1
+		}
+		let dir = currDir
+		let wantDir = DirectionOpposite[d]
+		console.log("Want dir: ", Direction[wantDir])
+		for (let i = fi - 1; i >= 0; i--) {
+			dir = DirectionCounterClockwise[dir]
+			console.log("Dir: ", Direction[dir])
+			if (dir == wantDir) return i
+		}
+		return fi
+	}
+	getFocusIndex(d: Direction): number {
+		const fi = this.ctx.focusedIndex
+		const i = this.focusIndexers[d][this.ctx.focusedIndex]
+		console.log("Focused indexers return:", i)
+		if (i != undefined && i != fi) {
+			return i
+		}
+		return this.findWindowTo(d)
+	}
+	onFocus(d: Direction): void {
+		const index = this.getFocusIndex(d)
+		console.log("Returned index: ", index)
+		const od = DirectionOpposite[d]
+		this.focusIndexers[od][index] = this.ctx.focusedIndex
+		this.ctx.focusedIndex = index
 		this.tile()
+	}
+	focusUp(): void {
+		this.onFocus(Direction.up)
 	}
 	focusDown(): void {
-		const newIndex = findDown(this.ctx.tiledWindows, this.ctx.focusedIndex, this.focusIndexers.down[this.ctx.focusedIndex])
-		if (newIndex == this.ctx.focusedIndex) return
-		this.focusIndexers.up[newIndex] = this.ctx.focusedIndex
-		this.ctx.focusedIndex = newIndex
-		this.tile()
+		this.onFocus(Direction.down)
 	}
 	focusLeft(): void {
-		const newIndex = findLeft(this.ctx.tiledWindows, this.ctx.focusedIndex, this.focusIndexers.left[this.ctx.focusedIndex])
-		if (newIndex == this.ctx.focusedIndex) return
-		this.focusIndexers.right[newIndex] = this.ctx.focusedIndex
-		this.ctx.focusedIndex = newIndex
-		this.tile()
+		this.onFocus(Direction.left)
 	}
 	focusRight(): void {
-		const newIndex = findRight(this.ctx.tiledWindows, this.ctx.focusedIndex, this.focusIndexers.right[this.ctx.focusedIndex])
-		if (newIndex == this.ctx.focusedIndex) return
-		this.focusIndexers.left[newIndex] = this.ctx.focusedIndex
+		this.onFocus(Direction.right)
+	}
+	onMove(d: Direction): void {
+		const newIndex = this.getFocusIndex(d)
+		const od = DirectionOpposite[d]
+		this.focusIndexers[od][newIndex] = this.ctx.focusedIndex
+		const temp = this.ctx.tiledWindows[newIndex]
+		this.ctx.tiledWindows[newIndex] = this.ctx.tiledWindows[this.ctx.focusedIndex]
+		this.ctx.tiledWindows[this.ctx.focusedIndex] = temp
 		this.ctx.focusedIndex = newIndex
 		this.tile()
 	}
 	moveUp(): void {
-		const newIndex = findUp(this.ctx.tiledWindows, this.ctx.focusedIndex, this.focusIndexers.up[this.ctx.focusedIndex])
-		this.focusIndexers.down[newIndex] = this.ctx.focusedIndex
-		const temp = this.ctx.tiledWindows[newIndex]
-		this.ctx.tiledWindows[newIndex] = this.ctx.tiledWindows[this.ctx.focusedIndex]
-		this.ctx.tiledWindows[this.ctx.focusedIndex] = temp
-		this.ctx.focusedIndex = newIndex
-		this.tile()
+		this.onMove(Direction.up)
 	}
 	moveDown(): void {
-		const newIndex = findDown(this.ctx.tiledWindows, this.ctx.focusedIndex, this.focusIndexers.down[this.ctx.focusedIndex])
-		this.focusIndexers.up[newIndex] = this.ctx.focusedIndex
-		const temp = this.ctx.tiledWindows[newIndex]
-		this.ctx.tiledWindows[newIndex] = this.ctx.tiledWindows[this.ctx.focusedIndex]
-		this.ctx.tiledWindows[this.ctx.focusedIndex] = temp
-		this.ctx.focusedIndex = newIndex
-		this.tile()
+		this.onMove(Direction.down)
 	}
 	moveLeft(): void {
-		const newIndex = findLeft(this.ctx.tiledWindows, this.ctx.focusedIndex, this.focusIndexers.left[this.ctx.focusedIndex])
-		this.focusIndexers.right[newIndex] = this.ctx.focusedIndex
-		const temp = this.ctx.tiledWindows[newIndex]
-		this.ctx.tiledWindows[newIndex] = this.ctx.tiledWindows[this.ctx.focusedIndex]
-		this.ctx.tiledWindows[this.ctx.focusedIndex] = temp
-		this.ctx.focusedIndex = newIndex
-		this.tile()
+		this.onMove(Direction.left)
 	}
 	moveRight(): void {
-		const newIndex = findRight(this.ctx.tiledWindows, this.ctx.focusedIndex, this.focusIndexers.right[this.ctx.focusedIndex])
-		this.focusIndexers.left[newIndex] = this.ctx.focusedIndex
-		const temp = this.ctx.tiledWindows[newIndex]
-		this.ctx.tiledWindows[newIndex] = this.ctx.tiledWindows[this.ctx.focusedIndex]
-		this.ctx.tiledWindows[this.ctx.focusedIndex] = temp
-		this.ctx.focusedIndex = newIndex
-		this.tile()
+		this.onMove(Direction.right)
 	}
 	onFocusWindow(window: Window): void {
 		this.ctx.focusedIndex = this.ctx.tiledWindows.findIndex(w => window === w.ref)
 		this.tile()
 	}
-	// I have determined a rule set for interacting with this, for a spiral layout:
-	// There are two important directions our window needs to handle:
-	// Primary, where it leaves reminaing space
-	// Opposite, opposite direction to this
-	// If we detect primary expend in that direction
-	// If we do not, look at previous index and see if it's opposite, if opposite we shrink
-	// If we fail to find previous index, we flip our direction and try again
-	// We will keep a cache of the last index moved, and for half a second if we detect a move in it's directions we will move the split according to that
-	// When we want to expand, that actually means we want to contract the opposite direction
-	// When we want to contract, that actually means we want to expand the opposite direction
-	// We have a special case when we are the last item in the list where we will bubble up in our own direction
-	// TODO actually impliment
 	findCurrentDirection(index: number): Direction {
 		// Only 4 directions total, so we can eliminate those
 		const modIndex = index % 4
